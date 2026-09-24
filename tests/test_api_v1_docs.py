@@ -134,3 +134,21 @@ class TestInteractiveDocs:
     def test_redoc_redirects_to_docs(self, client):
         r = client.get("/redoc", follow_redirects=False)
         assert r.status_code == 301 and r.headers["location"] == "/docs"
+
+
+class TestValidation:
+    def test_invalid_metric_value_is_400(self, client, authed):
+        body = {"AV": "Z", "AC": "L", "PR": "N", "UI": "N", "S": "U", "C": "H", "I": "H", "A": "H"}
+        r = client.post("/api/v1/calculate/3.1", headers={"X-API-Key": "k"}, json=body)
+        assert r.status_code == 400 and "'AV'" in r.json()["error"]
+
+    def test_incomplete_vector_is_400(self, client, authed):
+        r = client.post("/api/v1/calculate/vector", headers={"X-API-Key": "k"}, json={"vector": "CVSS:3.1/AV:N"})
+        assert r.status_code == 400 and "Missing base metric" in r.json()["error"]
+
+    def test_v4_modified_metrics_are_accepted(self, client, authed):
+        vector = "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/MAV:L/MSI:S"
+        r = client.post("/api/v1/calculate/vector", headers={"X-API-Key": "k"}, json={"vector": vector})
+        assert r.status_code == 200
+        r = client.post("/api/v1/convert", headers={"X-API-Key": "k"}, json={"vector": vector, "to": "3.1"})
+        assert r.status_code == 200

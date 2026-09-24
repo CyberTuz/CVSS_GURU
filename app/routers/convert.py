@@ -105,6 +105,17 @@ VECTOR_VALID_VALUES: Dict[str, Dict[str, list]] = {
         "CR": ["X", "L", "M", "H"],
         "IR": ["X", "L", "M", "H"],
         "AR": ["X", "L", "M", "H"],
+        "MAV": ["X", "N", "A", "L", "P"],
+        "MAC": ["X", "L", "H"],
+        "MAT": ["X", "N", "P"],
+        "MPR": ["X", "N", "L", "H"],
+        "MUI": ["X", "N", "P", "A"],
+        "MVC": ["X", "N", "L", "H"],
+        "MVI": ["X", "N", "L", "H"],
+        "MVA": ["X", "N", "L", "H"],
+        "MSC": ["X", "N", "L", "H"],
+        "MSI": ["X", "N", "L", "H", "S"],
+        "MSA": ["X", "N", "L", "H", "S"],
         "S": ["X", "N", "P"],
         "AU": ["X", "N", "Y"],
         "R": ["X", "A", "U", "I"],
@@ -112,6 +123,15 @@ VECTOR_VALID_VALUES: Dict[str, Dict[str, list]] = {
         "RE": ["X", "L", "M", "H"],
         "U": ["X", "Clear", "Green", "Amber", "Red"],
     },
+}
+
+
+# Base metrics every vector must contain
+BASE_METRICS: Dict[str, list] = {
+    "2.0": ["AV", "AC", "Au", "C", "I", "A"],
+    "3.0": ["AV", "AC", "PR", "UI", "S", "C", "I", "A"],
+    "3.1": ["AV", "AC", "PR", "UI", "S", "C", "I", "A"],
+    "4.0": ["AV", "AC", "AT", "PR", "UI", "VC", "VI", "VA", "SC", "SI", "SA"],
 }
 
 
@@ -151,26 +171,27 @@ def validate_vector(vector: str, version: str) -> tuple[bool, str]:
     metrics = parse_vector(vector)
     if not metrics:
         return False, "Invalid vector string: no valid metrics found"
+    return validate_metrics(metrics, detected)
 
-    valid_metrics = VECTOR_VALID_VALUES.get(detected)
+
+def validate_metrics(metrics: Dict[str, str], version: str) -> tuple[bool, str]:
+    """Check that all base metrics are present and every value exists in *version*.
+
+    Metrics the version doesn't define are ignored. Returns (is_valid, error_message).
+    """
+    valid_metrics = VECTOR_VALID_VALUES.get(version)
     if not valid_metrics:
-        return False, f"Unknown CVSS version: {detected}"
+        return False, f"Unknown CVSS version: {version}"
 
-    errors = []
-    for metric_name, value in metrics.items():
-        if metric_name in valid_metrics:
-            valid_values = valid_metrics[metric_name]
-        elif metric_name.startswith("M") and metric_name[1:] in valid_metrics:
-            valid_values = valid_metrics[metric_name]
-        else:
-            continue  # unknown metric — skip silently
+    missing = [m for m in BASE_METRICS[version] if m not in metrics]
+    if missing:
+        return False, f"Missing base metric(s): {', '.join(missing)}"
 
-        if value not in valid_values:
-            errors.append(
-                f"Invalid value '{value}' for metric '{metric_name}'. "
-                f"Expected: {', '.join(valid_values)}"
-            )
-
+    errors = [
+        f"Invalid value '{value}' for metric '{name}'. Expected: {', '.join(valid_metrics[name])}"
+        for name, value in metrics.items()
+        if name in valid_metrics and value not in valid_metrics[name]
+    ]
     if errors:
         return False, "; ".join(errors)
     return True, ""

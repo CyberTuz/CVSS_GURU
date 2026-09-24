@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from app.usage import check_usage_limit
 from app.deps import cvss2_calc, cvss3_calc, cvss31_calc, cvss4_calc
-from app.routers.convert import convert_metrics, parse_vector, validate_vector
+from app.routers.convert import convert_metrics, parse_vector, validate_metrics, validate_vector
 from app.routers.cve import api_cve_lookup
 
 router = APIRouter(
@@ -46,7 +46,7 @@ class ScoresResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     success: bool = Field(False, examples=[False])
-    error: str = Field(..., examples=["Invalid metric value for AV"])
+    error: str = Field(..., examples=["Invalid value 'Z' for metric 'AV'. Expected: N, A, L, P"])
 
 
 # Request bodies
@@ -121,7 +121,14 @@ def _prefix_version(vector: str) -> Optional[str]:
     return next((v for p, v in _PREFIXES.items() if vector.startswith(p)), None)
 
 
+def _check(metrics: Dict, version: str) -> None:
+    ok, error = validate_metrics(metrics, version)
+    if not ok:
+        raise ValueError(error)  # -> HTTP 400
+
+
 def _calculate(version: str, metrics: Dict) -> Dict:
+    _check(metrics, version)
     result = _CALCS[version].calculate(metrics)
     return {"version": version, "vector": result.get("vector_string"), "scores": _fmt_score(result), "metrics": metrics}
 
@@ -133,6 +140,7 @@ def _calculate_vector(vector: str) -> Dict:
             raise _Unprocessable("Cannot detect CVSS version from vector string.")
         version = "2.0"
     metrics = parse_vector(vector)
+    _check(metrics, version)
     result = _CALCS[version].calculate(metrics)
     return {"version": version, "vector": result.get("vector_string") or vector, "scores": _fmt_score(result), "metrics": metrics}
 
@@ -198,7 +206,8 @@ _EX_CVE = {
 }
 
 _ERROR_DOCS = {
-    400: ("Invalid metric values", {"success": False, "error": "Invalid metric value for AV"}),
+    400: ("Invalid or missing metric values",
+          {"success": False, "error": "Invalid value 'Z' for metric 'AV'. Expected: N, A, L, P"}),
     401: ("Missing or invalid API key", {"success": False, "error": "Invalid API key"}),
     404: ("CVE not found", {"success": False, "error": "CVE-2099-0001 not found in NVD."}),
     422: ("Unusable input (e.g. unknown vector format)",
