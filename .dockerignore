@@ -1,0 +1,49 @@
+# Only what the app needs at runtime goes into the image.
+
+# Git and editors
+.git
+.gitignore
+.vscode
+.idea
+.claude
+.kiro
+*.swp
+*.swo
+
+# Python caches and virtualenvs
+__pycache__
+*.py[cod]
+.pytest_cache
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Development only
+tests/
+requirements-dev.txt
+pytest.ini
+scripts/ai_benchmark/
+scripts/build_brand_assets.py
+scripts/vendor_assets.js
+
+# Front-end build tooling (app/static/css/app.css and app/static/vendor are committed)
+node_modules/
+package.json
+package-lock.json
+tailwind.config.js
+assets/
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# OS / logs
+.DS_Store
+Thumbs.db
+*.log

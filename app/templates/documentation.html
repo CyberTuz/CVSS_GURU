@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ static_url('favicon.svg') }}">
+    {% set section = "docs" %}{% set seo = seo_page("documentation") %}{% include "partials/theme_head.html" %}
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/regular/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/fill/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/fonts/fonts.css') }}">
+    <!-- Marked.js for Markdown rendering -->
+    <!-- Highlight.js for code blocks -->
+    <link rel="stylesheet" href="{{ static_url('vendor/highlight/atom-one-dark.min.css') }}">
+    <script src="{{ static_url('vendor/highlight/highlight.min.js') }}"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { min-height: 100vh; }
+
+        .glass-card { background: rgb(var(--surface) / 0.7); border: 1px solid rgb(var(--zinc-700) / 0.25); border-radius: 16px; backdrop-filter: blur(12px); }
+
+        /* Nav */
+        .nav-category {
+            display: flex; align-items: center; gap: 8px;
+            background: rgb(var(--surface) / 0.7); border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 14px; padding: 11px 22px;
+            color: rgb(var(--zinc-500)); font-weight: 600; font-size: 0.875rem;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .nav-category:hover { background: rgb(var(--zinc-800) / 0.8); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.5); }
+        .nav-category.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.45); color: rgb(var(--accent-fg)); }
+        .cat-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; background:rgb(var(--zinc-700) / 0.3); }
+        .nav-category.active .cat-icon { background: rgb(var(--accent) / 0.2); color: rgb(var(--accent-fg)); }
+
+        /* Sidebar */
+        .sidebar { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgb(var(--zinc-700) / 0.3) transparent; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgb(var(--zinc-700) / 0.3); border-radius: 2px; }
+
+        .toc-h2 {
+            display: block; padding: 6px 10px; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 600; color: rgb(var(--zinc-500));
+            text-decoration: none; transition: all 0.15s;
+            border: 1px solid transparent; cursor: pointer;
+        }
+        .toc-h2:hover { background: rgb(var(--zinc-800) / 0.5); color: rgb(var(--zinc-300)); }
+        .toc-h2.active { background: rgb(var(--accent) / 0.08); border-color: rgb(var(--accent) / 0.2); color: rgb(var(--accent-fg)); }
+
+        .toc-h3 {
+            display: block; padding: 4px 10px 4px 20px; border-radius: 6px;
+            font-size: 0.75rem; color: rgb(var(--zinc-600));
+            text-decoration: none; transition: all 0.15s; cursor: pointer;
+        }
+        .toc-h3:hover { color: rgb(var(--zinc-400)); }
+        .toc-h3.active { color: rgb(var(--accent-fg)); }
+
+        /* Markdown content */
+        .md-body { color: rgb(var(--zinc-400)); line-height: 1.75; }
+
+        .md-body h1 {
+            font-size: 2rem; font-weight: 900; color: rgb(var(--zinc-50));
+            margin-bottom: 1rem; padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgb(var(--zinc-700) / 0.2);
+        }
+        .md-body h2 {
+            font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; color: rgb(var(--zinc-50));
+            margin-top: 2.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgb(var(--zinc-700) / 0.15);
+            scroll-margin-top: 80px;
+        }
+        .md-body h3 {
+            font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; color: rgb(var(--zinc-100));
+            margin-top: 1.75rem; margin-bottom: 0.5rem;
+            scroll-margin-top: 80px;
+        }
+        .md-body h4 {
+            font-size: 0.78rem; font-weight: 700; color: rgb(var(--accent-fg));
+            text-transform: uppercase; letter-spacing: 0.06em;
+            margin-top: 1.25rem; margin-bottom: 0.4rem;
+        }
+        .md-body p { margin-bottom: 1rem; }
+
+        .md-body a { color: rgb(var(--accent-fg)); text-decoration: underline; text-underline-offset: 3px; }
+        .md-body a:hover { color: rgb(var(--amber-400)); }
+
+        .md-body strong { color: rgb(var(--zinc-200)); font-weight: 700; }
+
+        .md-body ul, .md-body ol {
+            margin: 0.75rem 0 1rem 1.5rem;
+        }
+        .md-body ul { list-style: disc; }
+        .md-body ol { list-style: decimal; }
+        .md-body li { margin-bottom: 0.35rem; }
+
+        .md-body blockquote {
+            border-left: 3px solid rgba(34,197,94,0.4);
+            background: rgba(34,197,94,0.05);
+            padding: 12px 16px; border-radius: 0 8px 8px 0;
+            margin: 1rem 0; color: #86efac; font-style: italic; font-size: 0.9rem;
+        }
+        .md-body blockquote p { margin: 0; }
+
+        /* Tables */
+        .md-body table {
+            width: 100%; border-collapse: collapse;
+            margin: 1.25rem 0; font-size: 0.85rem;
+            background: rgb(var(--surface) / 0.5); border-radius: 10px; overflow: hidden;
+        }
+        .md-body th {
+            background: rgb(var(--zinc-800) / 0.8); color: rgb(var(--zinc-400));
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 10px 14px; text-align: left; border-bottom: 1px solid rgb(var(--zinc-700) / 0.3);
+        }
+        .md-body td {
+            padding: 9px 14px; border-bottom: 1px solid rgb(var(--zinc-700) / 0.1); vertical-align: top;
+        }
+        .md-body tr:last-child td { border-bottom: none; }
+        .md-body tr:hover td { background: rgb(var(--zinc-800) / 0.3); }
+        .md-body td:first-child { font-family: 'Courier New', monospace; color: rgb(var(--accent-fg)); white-space: nowrap; }
+
+        /* Code */
+        .md-body code {
+            font-family: 'Courier New', monospace;
+            background: rgb(var(--zinc-800) / 0.6); border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 4px; padding: 2px 6px; font-size: 0.82em; color: #c084fc;
+        }
+        .md-body pre {
+            background: rgba(2,6,23,0.85) !important;
+            border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px; padding: 16px; margin: 1rem 0;
+            overflow-x: auto; position: relative;
+        }
+        .md-body pre code {
+            background: none; border: none; padding: 0;
+            font-size: 0.82rem; line-height: 1.6; color: inherit;
+        }
+
+        /* Copy button on code blocks */
+        .pre-wrapper { position: relative; }
+        .pre-copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgb(var(--zinc-800) / 0.9); border: 1px solid rgb(var(--zinc-700) / 0.3);
+            border-radius: 6px; padding: 4px 8px; color: rgb(var(--zinc-500));
+            font-size: 0.7rem; cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif;
+        }
+        .pre-copy-btn:hover { color: rgb(var(--zinc-200)); }
+
+        .md-body hr {
+            border: none; border-top: 1px solid rgb(var(--zinc-700) / 0.2);
+            margin: 2.5rem 0;
+        }
+
+        /* Progress bar at top */
+        #progress-bar {
+            position: fixed; top: 0; left: 0; height: 2px;
+            background: linear-gradient(90deg, rgb(var(--accent-fg)), rgb(var(--green-400)));
+            z-index: 100; transition: width 0.1s;
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar { position: static; max-height: none; }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+</head>
+<body class="text-zinc-200">
+
+    <div id="progress-bar" style="width:0%"></div>
+
+    {% include "partials/header.html" %}
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+
+        {% set active_category = "docs" %}
+        {% include "partials/nav.html" %}
+
+        <div class="grid lg:grid-cols-[240px_1fr] gap-8 items-start">
+
+            <!-- Sidebar TOC (populated by JS) -->
+            <aside class="sidebar">
+                <div class="glass-card p-4">
+                    <p class="text-xs font-bold text-zinc-600 uppercase tracking-wider mb-3 px-2">On this page</p>
+                    <nav id="toc"></nav>
+                </div>
+            </aside>
+
+            <!-- Doc content -->
+            <article class="glass-card p-8 md:p-10">
+                <article id="md-content" class="md-body">{{ guide_html | safe }}</article>
+            </article>
+
+        </div>
+    </main>
+
+    <script>
+        // The guide is rendered on the server (app/docs_render.py), headings already carry ids.
+        const headings = [];
+        document.querySelectorAll('#md-content h2, #md-content h3').forEach(el => {
+            headings.push({ level: parseInt(el.tagName[1]), text: el.textContent, id: el.id });
+        });
+
+        // ── Build sidebar TOC (before highlight.js so it works even if hljs fails) ──
+        const toc = document.getElementById('toc');
+        headings.forEach(({ level, text, id }) => {
+            const a = document.createElement('a');
+            a.href = '#' + id;
+            a.textContent = text;
+            a.className = level === 2 ? 'toc-h2' : 'toc-h3';
+            a.onclick = (e) => {
+                e.preventDefault();
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+            toc.appendChild(a);
+        });
+
+        // ── Active TOC link on scroll ──
+        const allHeadingEls = document.querySelectorAll('#md-content h2, #md-content h3');
+        const tocLinks = document.querySelectorAll('#toc a');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(l => l.classList.remove('active'));
+                    const active = document.querySelector(`#toc a[href="#${entry.target.id}"]`);
+                    if (active) active.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-10% 0px -80% 0px' });
+
+        allHeadingEls.forEach(h => observer.observe(h));
+
+        // ── Syntax highlight code blocks (wrapped in try/catch for resilience) ──
+        try {
+            document.querySelectorAll('#md-content pre code').forEach(block => {
+                hljs.highlightElement(block);
+
+                // Wrap in relative div for copy button
+                const pre = block.closest('pre');
+                const wrapper = document.createElement('div');
+                wrapper.className = 'pre-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+
+                const btn = document.createElement('button');
+                btn.className = 'pre-copy-btn';
+                btn.innerHTML = '<i class="ph ph-copy"></i> Copy';
+                btn.onclick = () => {
+                    navigator.clipboard.writeText(block.innerText).then(() => {
+                        btn.innerHTML = '<i class="ph ph-check"></i> Copied!';
+                        btn.style.color = 'rgb(var(--green-400))';
+                        setTimeout(() => { btn.innerHTML = '<i class="ph ph-copy"></i> Copy'; btn.style.color = ''; }, 1500);
+                    });
+                };
+                wrapper.appendChild(btn);
+            });
+        } catch (e) {
+            console.warn('Syntax highlighting unavailable:', e.message);
+        }
+
+        // ── Reading progress bar ──
+        window.addEventListener('scroll', () => {
+            const docEl = document.documentElement;
+            const scrolled = docEl.scrollTop / (docEl.scrollHeight - docEl.clientHeight);
+            document.getElementById('progress-bar').style.width = (scrolled * 100) + '%';
+        });
+    </script>
+
+    {% include "partials/footer.html" %}
+</body>
+</html>

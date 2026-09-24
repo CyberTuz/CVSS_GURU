@@ -1,0 +1,21 @@
+/* Tailwind entry point — compiled to app/static/css/app.css with `npm run build:css`. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Footer links (GitHub, Ko-fi) */
+  .footer-pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.45rem 0.9rem; border-radius: 999px;
+    font-size: 0.8125rem; font-weight: 500;
+    color: rgb(var(--zinc-300));
+    background: rgb(var(--zinc-800) / 0.5);
+    border: 1px solid rgb(var(--zinc-700) / 0.5);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .footer-pill:hover { color: rgb(var(--zinc-100)); border-color: rgb(var(--zinc-600)); }
+  .footer-pill i { font-size: 1rem; }
+  .footer-pill-donate i { color: #ff5e5b; }
+  .footer-pill-donate:hover { border-color: rgb(255 94 91 / 0.5); background: rgb(255 94 91 / 0.08); }
+}

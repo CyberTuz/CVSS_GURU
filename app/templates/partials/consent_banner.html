@@ -1,0 +1,13 @@
+{% if ga_measurement_id and not local_mode %}
+<div id="consent-banner" class="consent-banner" role="dialog" aria-live="polite" aria-label="Cookie consent" hidden>
+    <p>
+        We use Google Analytics cookies to understand how the site is used. No ads, no data sold.
+        You can change your choice at any time from the footer.
+        <a href="/privacy" style="text-decoration:underline;">Privacy policy</a>
+    </p>
+    <div class="consent-actions">
+        <button type="button" class="consent-btn" onclick="setConsent('denied')">Decline</button>
+        <button type="button" class="consent-btn consent-accept" onclick="setConsent('granted')">Accept</button>
+    </div>
+</div>
+{% endif %}

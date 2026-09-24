@@ -1,0 +1,512 @@
+[
+ {
+  "id": "CVE-2024-2721",
+  "latency": 15.69,
+  "cost": 0.0,
+  "tokens_in": 569,
+  "tokens_out": 1585,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-3875",
+  "latency": 7.29,
+  "cost": 0.0,
+  "tokens_in": 642,
+  "tokens_out": 1053,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-25029",
+  "latency": 7.22,
+  "cost": 0.0,
+  "tokens_in": 635,
+  "tokens_out": 901,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-1884",
+  "latency": 20.36,
+  "cost": 0.0,
+  "tokens_in": 572,
+  "tokens_out": 888,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "L",
+   "I": "L",
+   "A": "L"
+  }
+ },
+ {
+  "id": "CVE-2024-25418",
+  "latency": 34.98,
+  "cost": 0.0,
+  "tokens_in": 558,
+  "tokens_out": 857,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "N",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2023-6387",
+  "latency": 21.82,
+  "cost": 0.0,
+  "tokens_in": 555,
+  "tokens_out": 1319,
+  "metrics": {
+   "AV": "A",
+   "AC": "L",
+   "PR": "H",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "L"
+  }
+ },
+ {
+  "id": "CVE-2024-24855",
+  "latency": 23.72,
+  "cost": 0.0,
+  "tokens_in": 573,
+  "tokens_out": 1955,
+  "metrics": {
+   "AV": "L",
+   "AC": "H",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-0390",
+  "latency": 17.14,
+  "cost": 0.0,
+  "tokens_in": 611,
+  "tokens_out": 1551,
+  "metrics": {
+   "AV": "N",
+   "AC": "H",
+   "PR": "N",
+   "UI": "N",
+   "S": "C",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-22354",
+  "latency": 8.98,
+  "cost": 0.0,
+  "tokens_in": 622,
+  "tokens_out": 1021,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "N",
+   "A": "L"
+  }
+ },
+ {
+  "id": "CVE-2024-25152",
+  "latency": 7.07,
+  "cost": 0.0,
+  "tokens_in": 611,
+  "tokens_out": 745,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "L",
+   "UI": "R",
+   "S": "U",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-28114",
+  "latency": 13.9,
+  "cost": 0.0,
+  "tokens_in": 609,
+  "tokens_out": 1158,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "H",
+   "UI": "N",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2023-28715",
+  "latency": 17.45,
+  "cost": 0.0,
+  "tokens_in": 565,
+  "tokens_out": 789,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "L"
+  }
+ },
+ {
+  "id": "CVE-2023-27303",
+  "latency": 8.75,
+  "cost": 0.0,
+  "tokens_in": 562,
+  "tokens_out": 1133,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "L",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2023-40511",
+  "latency": 18.26,
+  "cost": 0.0,
+  "tokens_in": 607,
+  "tokens_out": 759,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-1784",
+  "latency": 27.15,
+  "cost": 0.0,
+  "tokens_in": 633,
+  "tokens_out": 1422,
+  "metrics": {
+   "AV": "N",
+   "AC": "H",
+   "PR": "H",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-25617",
+  "latency": 7.24,
+  "cost": 0.0,
+  "tokens_in": 728,
+  "tokens_out": 842,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2023-50886",
+  "latency": 13.69,
+  "cost": 0.0,
+  "tokens_in": 561,
+  "tokens_out": 906,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "N",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-2111",
+  "latency": 17.96,
+  "cost": 0.0,
+  "tokens_in": 615,
+  "tokens_out": 1286,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "L",
+   "UI": "R",
+   "S": "U",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2023-42855",
+  "latency": 6.43,
+  "cost": 0.0,
+  "tokens_in": 573,
+  "tokens_out": 739,
+  "metrics": {
+   "AV": "P",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-33553",
+  "latency": 24.51,
+  "cost": 0.0,
+  "tokens_in": 558,
+  "tokens_out": 1254,
+  "metrics": {
+   "AV": "N",
+   "AC": "H",
+   "PR": "H",
+   "UI": "R",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2023-34284",
+  "latency": 16.65,
+  "cost": 0.0,
+  "tokens_in": 638,
+  "tokens_out": 728,
+  "metrics": {
+   "AV": "A",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-26270",
+  "latency": 38.19,
+  "cost": 0.0,
+  "tokens_in": 612,
+  "tokens_out": 3525,
+  "metrics": {
+   "AV": "A",
+   "AC": "H",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2023-32479",
+  "latency": 10.66,
+  "cost": 0.0,
+  "tokens_in": 598,
+  "tokens_out": 1299,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-27287",
+  "latency": 19.92,
+  "cost": 0.0,
+  "tokens_in": 783,
+  "tokens_out": 1201,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "L",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-25125",
+  "latency": 16.75,
+  "cost": 0.0,
+  "tokens_in": 615,
+  "tokens_out": 1797,
+  "metrics": {
+   "AV": "L",
+   "AC": "H",
+   "PR": "H",
+   "UI": "R",
+   "S": "U",
+   "C": "L",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2023-27301",
+  "latency": 12.6,
+  "cost": 0.0,
+  "tokens_in": 564,
+  "tokens_out": 1143,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "L",
+   "I": "L",
+   "A": "L"
+  }
+ },
+ {
+  "id": "CVE-2023-34276",
+  "latency": 18.36,
+  "cost": 0.0,
+  "tokens_in": 669,
+  "tokens_out": 1060,
+  "metrics": {
+   "AV": "A",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-2527",
+  "latency": 15.85,
+  "cost": 0.0,
+  "tokens_in": 636,
+  "tokens_out": 1183,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "H",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "L"
+  }
+ },
+ {
+  "id": "CVE-2023-33843",
+  "latency": 14.7,
+  "cost": 0.0,
+  "tokens_in": 585,
+  "tokens_out": 1340,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "L",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-3157",
+  "latency": 9.6,
+  "cost": 0.0,
+  "tokens_in": 581,
+  "tokens_out": 1207,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "L",
+   "UI": "R",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ }
+]

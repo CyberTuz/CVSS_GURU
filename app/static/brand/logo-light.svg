@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 100" role="img" aria-label="CVSS Guru">
+  <title>CVSS Guru</title>
+  <path d="M14.00 68.00 A36 36 0 0 1 20.30 47.66" stroke="#64748b" stroke-width="12" fill="none"/>
+  <path d="M21.48 46.03 A36 36 0 0 1 37.92 34.09" stroke="#22c55e" stroke-width="12" fill="none"/>
+  <path d="M39.84 33.46 A36 36 0 0 1 60.16 33.46" stroke="#eab308" stroke-width="12" fill="none"/>
+  <path d="M62.08 34.09 A36 36 0 0 1 78.52 46.03" stroke="#f97316" stroke-width="12" fill="none"/>
+  <path d="M79.70 47.66 A36 36 0 0 1 86.00 68.00" stroke="#ef4444" stroke-width="12" fill="none"/>
+  <path d="M48.56 61.56 L83.38 60.54 L51.44 74.44 Z" fill="#111117" stroke="#111117" stroke-width="1.44" stroke-linejoin="round"/>
+  <circle cx="50" cy="68" r="7.20" fill="#111117"/>
+  <text x="106" y="62" text-anchor="start" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="42" font-weight="800" letter-spacing="-1.40" fill="#111117">cvss<tspan fill="#d97706" font-family="'Cormorant Garamond', Georgia, serif" font-style="italic" font-weight="600" font-size="46.0" letter-spacing="0">.guru</tspan></text>
+  <text x="108" y="83" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="10" font-weight="700" letter-spacing="2.2" fill="#5f6170">CVSS 2.0 · 3.x · 4.0 CALCULATOR</text>
+</svg>

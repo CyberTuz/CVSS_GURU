@@ -1,0 +1,20 @@
+<footer class="bg-neutral-950/50 border-t border-neutral-800 text-neutral-400 py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-8 text-center">
+        <p class="mb-2">CVSS Guru - Educational tool for CVSS scoring</p>
+        <p class="text-sm text-neutral-500 mb-1">Version {{ app_version }} | For inquiries: <a href="mailto:{{ contact_email }}" class="text-amber-500 hover:text-amber-400">{{ contact_email }}</a></p>
+        <p class="text-sm text-neutral-500 mb-3">Reference: <a href="https://www.first.org/cvss/" target="_blank" class="text-amber-500 hover:text-amber-400">FIRST CVSS Specification</a></p>
+        <div class="flex flex-wrap items-center justify-center gap-3 my-4">
+            <a href="{{ github_url }}" target="_blank" rel="noopener" class="footer-pill">
+                <i class="ph ph-github-logo"></i>Source code on GitHub
+            </a>
+            <a href="{{ donate_url }}" target="_blank" rel="noopener" class="footer-pill footer-pill-donate">
+                <i class="ph ph-coffee"></i>Support the project on Ko-fi
+            </a>
+        </div>
+        <p class="text-sm text-neutral-600 mb-3">CVSS is owned by <a href="https://www.first.org" target="_blank" class="text-neutral-500 hover:text-neutral-400">FIRST.Org, Inc.</a> and freely licensed for public use.</p>
+        <p class="text-sm text-neutral-600"><i class="ph ph-heart-fill text-red-500 mr-1"></i> Made with love in EU
+            · <a href="/privacy" class="hover:text-neutral-400 underline underline-offset-2">Privacy &amp; cookies</a>
+            {% if ga_measurement_id and not local_mode %}· <button type="button" onclick="openConsentBanner()" class="hover:text-neutral-400 underline underline-offset-2">Cookie settings</button>{% endif %}</p>
+    </div>
+</footer>
+{% include "partials/consent_banner.html" %}

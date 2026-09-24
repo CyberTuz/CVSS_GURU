@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ static_url('favicon.svg') }}">
+    {% set section = "tools" %}{% set seo = seo_page("ai-scorer") %}{% include "partials/theme_head.html" %}
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/regular/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/fill/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/fonts/fonts.css') }}">
+    {% if recaptcha_site_key and not local_mode %}
+    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}" async defer></script>
+    {% endif %}
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body {
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgb(var(--surface) / 0.7);
+            border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+        }
+        .nav-category {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgb(var(--surface) / 0.7);
+            border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 14px;
+            padding: 11px 22px;
+            color: rgb(var(--zinc-500));
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .nav-category:hover { background: rgb(var(--zinc-800) / 0.8); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.5); }
+        .nav-category.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.45); color: rgb(var(--accent-fg)); }
+        .cat-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; background: rgb(var(--zinc-700) / 0.3); transition: background 0.2s;
+        }
+        .nav-category.active .cat-icon { background: rgb(var(--accent) / 0.2); color: rgb(var(--accent-fg)); }
+        .version-tab {
+            background: rgb(var(--zinc-800) / 0.4); border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px; padding: 7px 16px; color: rgb(var(--zinc-500));
+            font-weight: 500; font-size: 0.8rem; text-decoration: none;
+            transition: all 0.2s; display: inline-flex; align-items: center; cursor: pointer;
+        }
+        .version-tab:hover { background: rgb(var(--zinc-800) / 0.7); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.4); }
+        .version-tab.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.4); color: rgb(var(--accent-fg)); }
+
+        /* Score colors */
+        .sev-none     { color: #94a3b8; }
+        .sev-low      { color: rgb(var(--green-400)); }
+        .sev-medium   { color: rgb(var(--amber-400)); }
+        .sev-high     { color: #f97316; }
+        .sev-critical { color: #ef4444; }
+
+        .badge-none     { background: rgba(148,163,184,0.1); border-color: rgba(148,163,184,0.3); color: #94a3b8; }
+        .badge-low      { background: rgb(var(--green-400) / 0.1);  border-color: rgb(var(--green-400) / 0.3);  color: rgb(var(--green-400)); }
+        .badge-medium   { background: rgb(var(--amber-400) / 0.1);  border-color: rgb(var(--amber-400) / 0.3);  color: rgb(var(--amber-400)); }
+        .badge-high     { background: rgba(249,115,22,0.1);  border-color: rgba(249,115,22,0.3);  color: #f97316; }
+        .badge-critical { background: rgba(239,68,68,0.1);   border-color: rgba(239,68,68,0.3);   color: #ef4444; }
+
+        .metric-chip {
+            display: flex; flex-direction: column; gap: 2px;
+            background: rgb(var(--zinc-800) / 0.5); border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px; padding: 10px 12px;
+        }
+
+        textarea:focus { outline: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 0.8s linear infinite; }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+        .fade-in { animation: fadeIn 0.4s ease both; }
+
+        .confidence-high   { color: rgb(var(--green-400)); }
+        .confidence-medium { color: rgb(var(--amber-400)); }
+        .confidence-low    { color: #f97316; }
+
+        /* reCAPTCHA v3 badge is replaced by the notice under the form (allowed by Google) */
+        .grecaptcha-badge { visibility: hidden; }
+    </style>
+    <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+</head>
+<body class="text-zinc-200">
+
+    {% include "partials/header.html" %}
+
+    {% set active_category = "tools" %}
+    {% set active_tool = "ai-scorer" %}
+    {% include "partials/nav.html" %}
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+
+        {% if not ai_configured %}
+        <!-- Warning: not configured -->
+        <div class="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+             style="background:rgb(var(--accent) / 0.08);border:1px solid rgb(var(--accent) / 0.25);color:rgb(var(--amber-400));">
+            <i class="ph ph-warning"></i>
+            <span>AI scoring is not configured. Add <code class="bg-zinc-800 px-1 rounded">OPENROUTER_API_KEY</code> to your environment variables.</span>
+        </div>
+        {% endif %}
+
+        <div class="grid lg:grid-cols-2 gap-6">
+
+            <!-- LEFT: Input form -->
+            <div class="space-y-4">
+                <div class="glass-card p-6">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                             style="background:rgb(var(--accent) / 0.15);border:1px solid rgb(var(--accent) / 0.3);">
+                            <i class="ph ph-robot text-lg" style="color:rgb(var(--accent));"></i>
+                        </div>
+                        <div>
+                            <h1 class="h-page">AI Scorer</h1>
+                            <p class="h-sub">Describe a vulnerability — get a CVSS v3.1 score</p>
+                        </div>
+                    </div>
+
+                    <form id="ai-form" onsubmit="submitScore(event)">
+                        <textarea
+                            id="vuln-description"
+                            name="description"
+                            rows="10"
+                            placeholder="Describe the vulnerability in plain language...
+
+Example: A remote unauthenticated attacker can send a crafted HTTP request to the login endpoint that triggers a buffer overflow in the parsing library, allowing arbitrary code execution with root privileges on the server."
+                            class="w-full bg-zinc-900/50 border border-zinc-700/50 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 resize-none transition-colors focus:border-amber-500/50"
+                            style="min-height:200px;"
+                            {% if not ai_configured %}disabled{% endif %}
+                        ></textarea>
+
+
+                        <div class="flex items-center justify-between mt-3">
+                            <span id="char-count" class="text-xs text-zinc-600">0 characters</span>
+                            <button
+                                type="submit"
+                                id="submit-btn"
+                                {% if not ai_configured %}disabled{% endif %}
+                                class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                                style="background:rgb(var(--accent) / 0.15);border:1px solid rgb(var(--accent) / 0.4);color:rgb(var(--accent));">
+                                <span id="btn-icon"><i class="ph ph-magic-wand"></i></span>
+                                <span id="btn-text">Analyze</span>
+                            </button>
+                        </div>
+                        {% if recaptcha_site_key and not local_mode %}
+                        <p class="text-[11px] text-zinc-600 mt-3">
+                            Protected by reCAPTCHA — the Google
+                            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-zinc-400">Privacy Policy</a> and
+                            <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-zinc-400">Terms of Service</a> apply.
+                        </p>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <!-- Tips -->
+                <div class="glass-card p-4">
+                    <p class="h-label mb-3">Tips for better results</p>
+                    <ul class="space-y-2 text-xs text-zinc-500">
+                        <li class="flex items-start gap-2"><i class="ph ph-circle mt-0.5 text-amber-500/50 text-[8px]"></i>Mention how the attacker accesses the system (network, local, physical)</li>
+                        <li class="flex items-start gap-2"><i class="ph ph-circle mt-0.5 text-amber-500/50 text-[8px]"></i>Specify if authentication or user interaction is required</li>
+                        <li class="flex items-start gap-2"><i class="ph ph-circle mt-0.5 text-amber-500/50 text-[8px]"></i>Describe what data can be accessed, modified, or disrupted</li>
+                        <li class="flex items-start gap-2"><i class="ph ph-circle mt-0.5 text-amber-500/50 text-[8px]"></i>Indicate if the impact extends beyond the vulnerable component</li>
+                    </ul>
+                </div>
+
+                <!-- How it works / accuracy note -->
+                <div class="glass-card p-5">
+                    <p class="h-label mb-2">How accurate is it?</p>
+                    <p class="text-xs text-zinc-500 leading-relaxed">
+                        Scores come from <span class="font-mono text-zinc-400">{{ ai_model }}</span> via OpenRouter,
+                        guided by a prompt tested against 45 CVEs scored by NVD: about <strong class="text-zinc-300">4 metrics out of 5</strong>
+                        match NVD and the base score is off by roughly <strong class="text-zinc-300">1.2–1.4 points</strong> on average.
+                        Treat the result as a starting point and review it in the
+                        <a href="/" class="text-amber-500 hover:text-amber-400 underline underline-offset-2">calculator</a>.
+                        <a href="https://github.com/CyberTuz/CVSS_GURU/tree/main/scripts/ai_benchmark" target="_blank" rel="noopener"
+                           class="text-amber-500 hover:text-amber-400 underline underline-offset-2">See the benchmark</a>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- RIGHT: Results -->
+            <div id="results-panel">
+
+                <!-- Empty state -->
+                <div id="empty-state" class="glass-card p-8 flex flex-col items-center justify-center text-center h-full" style="min-height:300px;">
+                    <div class="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center"
+                         style="background:rgb(var(--accent) / 0.08);border:1px solid rgb(var(--accent) / 0.15);">
+                        <i class="ph ph-robot text-2xl" style="color:rgb(var(--accent) / 0.4);"></i>
+                    </div>
+                    <p class="text-zinc-500 font-semibold mb-1">No analysis yet</p>
+                    <p class="text-sm text-zinc-600">Describe a vulnerability and click Analyze</p>
+                </div>
+
+                <!-- Loading state (hidden) -->
+                <div id="loading-state" class="hidden glass-card p-8 flex flex-col items-center justify-center text-center" style="min-height:300px;">
+                    <div class="w-12 h-12 rounded-full border-2 border-amber-500/20 border-t-amber-500 spinner mb-4"></div>
+                    <p class="text-zinc-400 font-semibold">Analyzing vulnerability...</p>
+                    <p class="text-sm text-zinc-600 mt-1">AI is scoring your description</p>
+                </div>
+
+                <!-- Result state (hidden) -->
+                <div id="result-state" class="hidden space-y-4 fade-in">
+
+                    <!-- Score card -->
+                    <div class="glass-card p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <p class="text-xs text-zinc-500 uppercase tracking-wider mb-1">CVSS v3.1 Base Score</p>
+                                <div class="flex items-baseline gap-3">
+                                    <span id="res-score" class="text-5xl font-black">—</span>
+                                    <span id="res-severity-badge" class="px-3 py-1 rounded-full text-sm font-semibold border">—</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-zinc-600 mb-1">Confidence</p>
+                                <p id="res-confidence" class="text-sm font-semibold">—</p>
+                            </div>
+                        </div>
+
+                        <!-- Vector string -->
+                        <div class="flex items-center gap-2 bg-zinc-900/50 rounded-lg px-3 py-2 mt-2">
+                            <span class="text-xs text-zinc-600 flex-shrink-0">Vector</span>
+                            <code id="res-vector" class="text-xs text-zinc-300 font-mono break-all flex-1">—</code>
+                            <button onclick="copyVector()" class="flex-shrink-0 text-zinc-600 hover:text-zinc-300 transition-colors text-xs" title="Copy">
+                                <i class="ph ph-copy"></i>
+                            </button>
+                        </div>
+
+                        <!-- AI Summary -->
+                        <p id="res-summary" class="text-sm text-zinc-400 mt-4 leading-relaxed border-t border-zinc-700/50 pt-4"></p>
+
+                        <!-- Model badge -->
+                        <p id="res-model" class="text-xs text-zinc-600 mt-3"></p>
+                    </div>
+
+                    <!-- Metrics breakdown -->
+                    <div class="glass-card p-5">
+                        <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Metric Breakdown</p>
+                        <div id="res-metrics" class="grid grid-cols-2 gap-3"></div>
+                    </div>
+
+                </div>
+
+                <!-- Error state (hidden) -->
+                <div id="error-state" class="hidden glass-card p-8 flex flex-col items-center justify-center text-center" style="min-height:300px;">
+                    <div class="w-12 h-12 rounded-full mb-4 flex items-center justify-center"
+                         style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);">
+                        <i class="ph ph-warning text-red-400"></i>
+                    </div>
+                    <p class="text-zinc-300 font-semibold mb-1">Analysis failed</p>
+                    <p id="error-msg" class="text-sm text-zinc-500 mt-1"></p>
+                </div>
+
+                <!-- Login required state (hidden) -->
+                <div id="login-required-state" class="hidden glass-card p-8 flex flex-col items-center justify-center text-center" style="min-height:300px;">
+                    <div class="w-14 h-14 rounded-2xl mb-5 flex items-center justify-center"
+                         style="background:rgb(var(--accent) / 0.1);border:1px solid rgb(var(--accent) / 0.25);">
+                        <i class="ph ph-lock-key text-2xl" style="color:rgb(var(--accent));"></i>
+                    </div>
+                    <p class="text-zinc-100 font-bold text-lg mb-2">Free analysis used</p>
+                    <p class="text-sm text-zinc-400 mb-6 max-w-xs">You've used your free AI analysis. Sign in to get unlimited scoring.</p>
+                    <div class="flex gap-3">
+                        <a href="/login" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                           style="background:rgb(var(--accent) / 0.15);border:1px solid rgb(var(--accent) / 0.4);color:rgb(var(--accent));">
+                            <i class="ph ph-sign-in"></i>Sign in
+                        </a>
+                        <a href="/register" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                           style="background:rgb(var(--zinc-800) / 0.6);border:1px solid rgb(var(--zinc-700) / 0.3);color:rgb(var(--zinc-400));">
+                            <i class="ph ph-user-plus"></i>Create account
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const METRIC_LABELS = {
+            AV: { label: "Attack Vector",       values: { N:"Network", A:"Adjacent", L:"Local", P:"Physical" } },
+            AC: { label: "Attack Complexity",    values: { L:"Low", H:"High" } },
+            PR: { label: "Privileges Required",  values: { N:"None", L:"Low", H:"High" } },
+            UI: { label: "User Interaction",     values: { N:"None", R:"Required" } },
+            S:  { label: "Scope",                values: { U:"Unchanged", C:"Changed" } },
+            C:  { label: "Confidentiality",      values: { N:"None", L:"Low", H:"High" } },
+            I:  { label: "Integrity",            values: { N:"None", L:"Low", H:"High" } },
+            A:  { label: "Availability",         values: { N:"None", L:"Low", H:"High" } },
+        };
+
+        const SEV_CLASS = {
+            None: "sev-none", Low: "sev-low", Medium: "sev-medium", High: "sev-high", Critical: "sev-critical"
+        };
+        const BADGE_CLASS = {
+            None: "badge-none", Low: "badge-low", Medium: "badge-medium", High: "badge-high", Critical: "badge-critical"
+        };
+
+        // reCAPTCHA v3 (invisible): a fresh token is requested on every submit.
+        const RECAPTCHA_SITE_KEY = {{ (recaptcha_site_key if not local_mode else '') | tojson }};
+        async function getRecaptchaToken() {
+            if (!RECAPTCHA_SITE_KEY) return '';
+            if (typeof grecaptcha === 'undefined') throw new Error('recaptcha-not-loaded');
+            await new Promise(resolve => grecaptcha.ready(resolve));
+            return grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'ai_score' });
+        }
+
+        // Character counter
+        document.getElementById('vuln-description').addEventListener('input', function() {
+            document.getElementById('char-count').textContent = this.value.length + ' characters';
+        });
+
+        function setState(state) {
+            document.getElementById('empty-state').classList.toggle('hidden', state !== 'empty');
+            document.getElementById('loading-state').classList.toggle('hidden', state !== 'loading');
+            document.getElementById('result-state').classList.toggle('hidden', state !== 'result');
+            document.getElementById('error-state').classList.toggle('hidden', state !== 'error');
+            document.getElementById('login-required-state').classList.toggle('hidden', state !== 'login-required');
+        }
+
+        async function submitScore(e) {
+            e.preventDefault();
+            const desc = document.getElementById('vuln-description').value.trim();
+            if (!desc) return;
+
+
+            // Loading state
+            setState('loading');
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            document.getElementById('btn-icon').innerHTML = '<i class="ph ph-circle-notch spinner"></i>';
+            document.getElementById('btn-text').textContent = 'Analyzing...';
+
+            try {
+                let recaptchaToken = '';
+                try {
+                    recaptchaToken = await getRecaptchaToken();
+                } catch (err) {
+                    showError('Could not load the anti-bot check. Disable content blockers for this page and try again.');
+                    return;
+                }
+                const form = new FormData();
+                form.append('description', desc);
+                form.append('recaptcha_token', recaptchaToken);
+
+                const res = await fetch('/api/ai-score', { method: 'POST', body: form });
+                const data = await res.json();
+
+                if (res.status === 401 && data.error === 'login_required') {
+                    setState('login-required');
+                    return;
+                }
+
+                if (!data.success) {
+                    showError(data.message || data.error || 'Unknown error');
+                    return;
+                }
+
+                renderResult(data);
+                setState('result');
+
+            } catch (err) {
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('btn-icon').innerHTML = '<i class="ph ph-magic-wand"></i>';
+                document.getElementById('btn-text').textContent = 'Analyze';
+            }
+        }
+
+        function renderResult(data) {
+            const sev = data.severity || 'None';
+            const sevClass = SEV_CLASS[sev] || 'sev-none';
+            const badgeClass = BADGE_CLASS[sev] || 'badge-none';
+
+            document.getElementById('res-score').textContent = data.score ?? '—';
+            document.getElementById('res-score').className = `text-5xl font-black ${sevClass}`;
+
+            const badge = document.getElementById('res-severity-badge');
+            badge.textContent = sev;
+            badge.className = `px-3 py-1 rounded-full text-sm font-semibold border ${badgeClass}`;
+
+            const conf = data.confidence || 'medium';
+            const confEl = document.getElementById('res-confidence');
+            confEl.textContent = conf.charAt(0).toUpperCase() + conf.slice(1);
+            confEl.className = `text-sm font-semibold confidence-${conf}`;
+
+            document.getElementById('res-vector').textContent = data.vector || '—';
+            document.getElementById('res-summary').textContent = data.summary || '';
+            document.getElementById('res-model').textContent = 'Model: ' + (data.model || '—');
+
+            // Metrics grid
+            const grid = document.getElementById('res-metrics');
+            grid.innerHTML = '';
+            const reasoning = data.reasoning || {};
+            const metrics = data.metrics || {};
+
+            Object.entries(METRIC_LABELS).forEach(([key, meta]) => {
+                const val = metrics[key];
+                const valLabel = meta.values[val] || val;
+                const chip = document.createElement('div');
+                chip.className = 'metric-chip';
+                chip.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-zinc-500">${meta.label}</span>
+                        <span class="text-xs font-bold text-zinc-200">${valLabel}</span>
+                    </div>
+                    ${reasoning[key] ? `<p class="text-xs text-zinc-500 mt-1 leading-relaxed">${reasoning[key]}</p>` : ''}
+                `;
+                grid.appendChild(chip);
+            });
+        }
+
+        function showError(msg) {
+            document.getElementById('error-msg').textContent = msg;
+            setState('error');
+        }
+
+        function copyVector() {
+            const v = document.getElementById('res-vector').textContent;
+            if (v && v !== '—') {
+                navigator.clipboard.writeText(v).then(() => {
+                    const btn = event.currentTarget;
+                    btn.innerHTML = '<i class="ph ph-check text-green-400"></i>';
+                    setTimeout(() => btn.innerHTML = '<i class="ph ph-copy"></i>', 1500);
+                    track('ai_vector_copied', { vector: v });
+                });
+            }
+        }
+
+        // ── Analytics (GA4 via track()) ──────────────────────────────
+
+        // Hook into submitScore: track submit and result/error
+        const _origSubmitScore = submitScore;
+        // Wrap renderResult to track success
+        const _origRenderResult = renderResult;
+        renderResult = function(data) {
+            _origRenderResult(data);
+            track('ai_score_success', {
+                score:      data.score,
+                severity:   data.severity,
+                confidence: data.confidence,
+                model:      data.model,
+            });
+        };
+        // Wrap showError to track failures
+        const _origShowError = showError;
+        showError = function(msg) {
+            _origShowError(msg);
+            track('ai_score_error', { error: msg });
+        };
+        // Track form submission
+        document.getElementById('ai-form').addEventListener('submit', function() {
+            const desc = document.getElementById('vuln-description').value.trim();
+            track('ai_score_submitted', { description_length: desc.length });
+        });
+    </script>
+
+    {% include "partials/footer.html" %}
+</body>
+</html>

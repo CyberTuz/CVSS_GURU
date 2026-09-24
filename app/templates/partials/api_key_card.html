@@ -1,0 +1,92 @@
+{# API Key card — used in profile.html and returned by POST /api/user/regenerate-api-key (HTMX swap).
+   Keys are stored hashed: the full key (`new_key`) is only available right after it is generated;
+   afterwards only its prefix (`api_key_prefix`) is known. #}
+<div id="api-key-card" class="mt-8">
+    <h2 class="h-label mb-3">API Key</h2>
+
+    {% if not email_verified %}
+    <!-- Email not confirmed: no keys yet -->
+    <div class="bg-zinc-800/40 border border-zinc-700/30 rounded-xl p-5 flex items-center gap-3">
+        <i class="ph ph-lock-simple text-zinc-500 text-lg"></i>
+        <div>
+            <p class="text-sm text-zinc-400 font-medium mb-0.5">Confirm your email first</p>
+            <p class="text-xs text-zinc-600">API keys can be generated once your email address is confirmed.</p>
+        </div>
+    </div>
+
+    {% elif new_key %}
+    <!-- Just generated: shown once -->
+    <div class="bg-zinc-800/40 border rounded-xl p-5" style="border-color:rgb(var(--accent) / 0.35);">
+        <p class="text-sm text-zinc-300 font-medium mb-1">Your new API key</p>
+        <p class="text-xs text-zinc-500 mb-4">
+            Copy it now and keep it somewhere safe: for security it is stored hashed and
+            <strong class="text-zinc-300">will not be shown again</strong>. The previous key no longer works.
+        </p>
+        <div class="flex items-center gap-2">
+            <div class="flex-1 bg-zinc-900/60 border border-zinc-700/40 rounded-lg px-4 py-2.5 font-mono text-sm text-zinc-200 break-all select-all" id="api-key-plain">{{ new_key }}</div>
+            <button onclick="copyApiKey()" id="copy-btn"
+                    class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-zinc-700/40 bg-zinc-800/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600/60 transition-colors"
+                    title="Copy key">
+                <i class="ph ph-copy" id="copy-icon"></i>
+            </button>
+        </div>
+    </div>
+
+    {% elif api_key_prefix %}
+    <!-- Existing key: only the prefix is known -->
+    <div class="bg-zinc-800/40 border border-zinc-700/30 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-3">
+            <p class="text-xs text-zinc-500">Use this key to authenticate requests to the <a href="/api-reference#authentication" class="text-amber-500 hover:text-amber-400">REST API v1</a>.</p>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="background:rgb(var(--accent) / 0.1);border:1px solid rgb(var(--accent) / 0.25);color:rgb(var(--accent-fg));">Active</span>
+        </div>
+        <div class="bg-zinc-900/60 border border-zinc-700/40 rounded-lg px-4 py-2.5 font-mono text-sm mb-4">
+            <span class="text-zinc-200">{{ api_key_prefix }}</span><span class="text-zinc-600 tracking-widest select-none">••••••••••••••••••••••••••••••••</span>
+        </div>
+        <div class="flex items-center justify-between gap-4">
+            <p class="text-xs text-zinc-600">Lost it? Keys are stored hashed and cannot be displayed again — generate a new one.</p>
+            <button
+                hx-post="/api/user/regenerate-api-key"
+                hx-target="#api-key-card"
+                hx-swap="outerHTML"
+                hx-vals='{"csrf_token": "{{ csrf_token }}"}'
+                hx-confirm="Generate a new API key? The current key will stop working immediately."
+                class="flex-shrink-0 flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg border border-zinc-700/30 hover:border-red-500/30 bg-zinc-800/40">
+                <i class="ph ph-arrows-clockwise"></i>Regenerate
+            </button>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- No key yet -->
+    <div class="bg-zinc-800/40 border border-zinc-700/30 rounded-xl p-5 flex items-center justify-between gap-4">
+        <div>
+            <p class="text-sm text-zinc-400 font-medium mb-0.5">No API key yet</p>
+            <p class="text-xs text-zinc-600">Generate a key to use the REST API v1. It is shown only once.</p>
+        </div>
+        <button
+            hx-post="/api/user/regenerate-api-key"
+            hx-target="#api-key-card"
+            hx-swap="outerHTML"
+            hx-vals='{"csrf_token": "{{ csrf_token }}"}'
+            class="flex-shrink-0 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            style="background:rgb(var(--accent) / 0.15);border:1px solid rgb(var(--accent) / 0.3);color:rgb(var(--accent-fg));">
+            <i class="ph ph-key"></i>Generate Key
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function copyApiKey() {
+    const key = document.getElementById('api-key-plain').textContent.trim();
+    navigator.clipboard.writeText(key).then(() => {
+        const icon = document.getElementById('copy-icon');
+        icon.className = 'ph ph-check';
+        icon.style.color = 'rgb(var(--green-400))';
+        setTimeout(() => {
+            icon.className = 'ph ph-copy';
+            icon.style.color = '';
+        }, 1800);
+    });
+}
+</script>

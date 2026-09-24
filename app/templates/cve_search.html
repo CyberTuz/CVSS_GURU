@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ static_url('favicon.svg') }}">
+    {% set section = "tools" %}{% set seo = seo_page("cve-search") %}{% include "partials/theme_head.html" %}
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/regular/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/fill/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/fonts/fonts.css') }}">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body {
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgb(var(--surface) / 0.7);
+            border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+        }
+        .nav-category {
+            display: flex; align-items: center; gap: 8px;
+            background: rgb(var(--surface) / 0.7);
+            border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 14px; padding: 11px 22px;
+            color: rgb(var(--zinc-500)); font-weight: 600; font-size: 0.875rem;
+            text-decoration: none; transition: all 0.2s; cursor: pointer;
+        }
+        .nav-category:hover { background: rgb(var(--zinc-800) / 0.8); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.5); }
+        .nav-category.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.45); color: rgb(var(--accent-fg)); }
+        .cat-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; background: rgb(var(--zinc-700) / 0.3); transition: background 0.2s;
+        }
+        .nav-category.active .cat-icon { background: rgb(var(--accent) / 0.2); color: rgb(var(--accent-fg)); }
+        .version-tab {
+            background: rgb(var(--zinc-800) / 0.4); border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px; padding: 7px 16px; color: rgb(var(--zinc-500));
+            font-weight: 500; font-size: 0.8rem; text-decoration: none;
+            transition: all 0.2s; display: inline-flex; align-items: center; cursor: pointer;
+        }
+        .version-tab:hover { background: rgb(var(--zinc-800) / 0.7); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.4); }
+        .version-tab.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.4); color: rgb(var(--accent-fg)); }
+
+        /* Severity colors */
+        .sev-none     { --c: 148,163,184; }
+        .sev-low      { --c: 74,222,128;  }
+        .sev-medium   { --c: 251,191,36;  }
+        .sev-high     { --c: 249,115,22;  }
+        .sev-critical { --c: 239,68,68;   }
+
+        .score-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            background: rgba(var(--c), 0.1); border: 1px solid rgba(var(--c), 0.3);
+            color: rgb(var(--c));
+        }
+
+        .version-score-card {
+            background: rgb(var(--surface) / 0.7);
+            border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 12px; padding: 16px;
+            transition: border-color 0.2s;
+        }
+        .version-score-card:hover { border-color: rgb(var(--zinc-700) / 0.4); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 0.8s linear infinite; }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+        .fade-in { animation: fadeIn 0.35s ease both; }
+
+        input[type="text"]:focus { outline: none; }
+
+        .search-input {
+            background: rgb(var(--surface) / 0.8);
+            border: 1px solid rgb(var(--zinc-700) / 0.3);
+            border-radius: 12px;
+            color: rgb(var(--zinc-200));
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: rgb(var(--accent) / 0.5); }
+        .search-input.invalid { border-color: rgba(239,68,68,0.5) !important; }
+        .search-input::placeholder { font-family: 'Inter', sans-serif; letter-spacing: normal; color: rgb(var(--zinc-600)); font-size: 0.9rem; }
+    </style>
+    <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+</head>
+<body class="text-zinc-200">
+
+    {% include "partials/header.html" %}
+
+    {% set active_category = "tools" %}
+    {% set active_tool = "cve-search" %}
+    {% include "partials/nav.html" %}
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+
+        <!-- Search bar -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style="background:rgb(var(--accent) / 0.12);border:1px solid rgb(var(--accent) / 0.3);">
+                    <i class="ph ph-magnifying-glass text-lg text-amber-500"></i>
+                </div>
+                <div>
+                    <h1 class="h-page">CVE Search</h1>
+                    <p class="h-sub">Retrieve CVSS scores across all versions for any CVE</p>
+                </div>
+            </div>
+
+            <form id="search-form" onsubmit="doSearch(event)" class="mt-4">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input
+                        id="cve-input"
+                        type="text"
+                        placeholder="e.g. CVE-2021-44228"
+                        maxlength="30"
+                        autocomplete="off"
+                        spellcheck="false"
+                        class="search-input flex-1 min-w-0 w-full px-4 py-3"
+                        oninput="onInput(this)"
+                    />
+                    <button
+                        type="submit"
+                        id="search-btn"
+                        class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all flex-shrink-0"
+                        style="background:rgb(var(--accent) / 0.12);border:1px solid rgb(var(--accent) / 0.35);color:rgb(var(--accent-fg));">
+                        <span id="btn-icon"><i class="ph ph-magnifying-glass"></i></span>
+                        <span id="btn-text">Search</span>
+                    </button>
+                </div>
+                <p id="input-hint" class="text-xs text-zinc-600 mt-2 ml-1">Format: CVE-YYYY-NNNNN</p>
+            </form>
+
+            <!-- Recent searches -->
+            <div id="recent-wrap" class="hidden mt-4 pt-4 border-t border-zinc-700/40">
+                <p class="text-xs text-zinc-600 mb-2">Recent</p>
+                <div id="recent-list" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+
+        <!-- Results area -->
+        <div id="results-area">
+
+            <!-- Empty state -->
+            <div id="state-empty" class="glass-card p-10 text-center">
+                <div class="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                     style="background:rgb(var(--accent) / 0.07);border:1px solid rgb(var(--accent) / 0.15);">
+                    <i class="ph ph-shield text-2xl" style="color:rgb(var(--accent) / 0.35);"></i>
+                </div>
+                <p class="text-zinc-500 font-semibold mb-1">Search for a CVE</p>
+                <p class="text-sm text-zinc-600">Enter a CVE identifier above to retrieve its CVSS scores</p>
+            </div>
+
+            <!-- Loading state -->
+            <div id="state-loading" class="hidden glass-card p-10 text-center">
+                <div class="w-10 h-10 mx-auto rounded-full border-2 border-amber-500/20 border-t-amber-500 spinner mb-4"></div>
+                <p class="text-zinc-400 font-semibold">Fetching from NVD...</p>
+                <p class="text-sm text-zinc-600 mt-1">National Vulnerability Database</p>
+            </div>
+
+            <!-- Error state -->
+            <div id="state-error" class="hidden glass-card p-10 text-center">
+                <div class="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center"
+                     style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);">
+                    <i class="ph ph-warning text-red-400"></i>
+                </div>
+                <p class="text-zinc-300 font-semibold mb-1">Not found</p>
+                <p id="error-msg" class="text-sm text-zinc-500 mt-1"></p>
+            </div>
+
+            <!-- Result state -->
+            <div id="state-result" class="hidden space-y-4 fade-in">
+
+                <!-- CVE header -->
+                <div class="glass-card p-6">
+                    <div class="flex items-start justify-between flex-wrap gap-3 mb-3">
+                        <div>
+                            <div class="flex items-center gap-3 mb-1">
+                                <h2 id="res-id" class="text-xl font-black text-white font-mono"></h2>
+                                <span id="res-cached" class="hidden text-xs px-2 py-0.5 rounded-full"
+                                      style="background:rgb(var(--zinc-700) / 0.2);color:rgb(var(--zinc-500));">cached</span>
+                            </div>
+                            <div class="flex items-center gap-4 text-xs text-zinc-500">
+                                <span><i class="ph ph-calendar mr-1 opacity-60"></i><span id="res-published"></span></span>
+                                <span><i class="ph ph-arrows-clockwise mr-1 opacity-60"></i>Updated <span id="res-modified"></span></span>
+                            </div>
+                        </div>
+                        <a id="res-nvd-link" href="#" target="_blank" rel="noopener noreferrer"
+                           class="text-xs flex items-center gap-1.5 transition-colors text-zinc-500 hover:text-amber-500">
+                            <i class="ph ph-arrow-square-out"></i>NVD
+                        </a>
+                    </div>
+                    <p id="res-description" class="text-sm text-zinc-400 leading-relaxed"></p>
+                    <div id="res-weaknesses" class="flex flex-wrap gap-2 mt-3"></div>
+                </div>
+
+                <!-- CVSS Scores -->
+                <div class="glass-card p-6">
+                    <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">CVSS Scores</p>
+                    <div id="res-scores" class="grid sm:grid-cols-2 gap-3"></div>
+                </div>
+
+                <!-- References -->
+                <div id="res-refs-card" class="hidden glass-card p-5">
+                    <p class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">References</p>
+                    <ul id="res-refs" class="space-y-1.5"></ul>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const SEV_CLASS = { NONE:'sev-none', LOW:'sev-low', MEDIUM:'sev-medium', HIGH:'sev-high', CRITICAL:'sev-critical' };
+
+        const VERSION_LABELS = {
+            v2:  { label: 'CVSS v2.0', year: '2007', color: '99,102,241' },
+            v30: { label: 'CVSS v3.0', year: '2015', color: '212,148,10' },
+            v31: { label: 'CVSS v3.1', year: '2019', color: '212,148,10' },
+            v40: { label: 'CVSS v4.0', year: '2023', color: '212,148,10' },
+        };
+
+        // Map NVD version string to calculator tab param
+        const VERSION_TAB = { '2.0': 'v2', '3.0': 'v3', '3.1': 'v31', '4.0': 'v4' };
+
+        let recentSearches = JSON.parse(localStorage.getItem('cve_recent') || '[]');
+
+        function onInput(el) {
+            let v = el.value.toUpperCase().replace(/[^CVE0-9\-]/g, '');
+            el.value = v;
+            el.classList.remove('invalid');
+            document.getElementById('input-hint').style.color = '';
+        }
+
+        function setState(s) {
+            ['empty','loading','error','result'].forEach(id =>
+                document.getElementById('state-' + id).classList.toggle('hidden', id !== s)
+            );
+        }
+
+        async function doSearch(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('cve-input');
+            const cveId = input.value.trim().toUpperCase();
+
+            // Validate
+            if (!/^CVE-\d{4}-\d{4,}$/.test(cveId)) {
+                input.classList.add('invalid');
+                document.getElementById('input-hint').style.color = 'rgb(var(--red-400))';
+                return;
+            }
+
+            setState('loading');
+            setButtonLoading(true);
+
+            try {
+                const res = await fetch(`/api/cve/${encodeURIComponent(cveId)}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    document.getElementById('error-msg').textContent = data.error || 'CVE not found.';
+                    setState('error');
+                    return;
+                }
+
+                renderResult(data);
+                setState('result');
+                addRecent(cveId);
+
+            } catch (err) {
+                document.getElementById('error-msg').textContent = 'Network error. Please try again.';
+                setState('error');
+            } finally {
+                setButtonLoading(false);
+            }
+        }
+
+        function setButtonLoading(loading) {
+            document.getElementById('search-btn').disabled = loading;
+            document.getElementById('btn-icon').innerHTML = loading
+                ? '<i class="ph ph-circle-notch spinner"></i>'
+                : '<i class="ph ph-magnifying-glass"></i>';
+            document.getElementById('btn-text').textContent = loading ? 'Searching...' : 'Search';
+        }
+
+        function renderResult(data) {
+            document.getElementById('res-id').textContent = data.id;
+            document.getElementById('res-published').textContent = data.published || '—';
+            document.getElementById('res-modified').textContent = data.modified || '—';
+            document.getElementById('res-description').textContent = data.description;
+            document.getElementById('res-nvd-link').href = `https://nvd.nist.gov/vuln/detail/${data.id}`;
+
+            const cached = document.getElementById('res-cached');
+            cached.classList.toggle('hidden', !data.cached);
+
+            // Weaknesses (CWE)
+            const weakEl = document.getElementById('res-weaknesses');
+            weakEl.innerHTML = '';
+            (data.weaknesses || []).forEach(w => {
+                const chip = document.createElement('span');
+                chip.className = 'text-xs px-2 py-0.5 rounded-full font-mono';
+                chip.style = 'background:rgb(var(--zinc-700) / 0.2);color:#94a3b8;border:1px solid rgb(var(--zinc-700) / 0.3);';
+                chip.textContent = w;
+                weakEl.appendChild(chip);
+            });
+
+            // CVSS Scores
+            const scoresEl = document.getElementById('res-scores');
+            scoresEl.innerHTML = '';
+            let hasAny = false;
+
+            Object.entries(VERSION_LABELS).forEach(([key, meta]) => {
+                const score = data.scores[key];
+                const card = document.createElement('div');
+                card.className = 'version-score-card';
+
+                if (!score) {
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-zinc-400">${meta.label}</span>
+                            <span class="text-xs text-zinc-600">Not available</span>
+                        </div>
+                        <div class="text-zinc-700 text-sm">—</div>`;
+                } else {
+                    hasAny = true;
+                    const sev = (score.severity || 'NONE').toUpperCase();
+                    const sevClass = SEV_CLASS[sev] || 'sev-none';
+                    const tabParam = VERSION_TAB[score.version] || 'v31';
+                    const calcUrl  = `/?version=${tabParam}&vector=${encodeURIComponent(score.vector)}&mode=calculator`;
+                    const convUrl  = `/?tool=converter&from=${score.version}&vector=${encodeURIComponent(score.vector)}`;
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-zinc-300">${meta.label}</span>
+                            <span class="score-pill ${sevClass}">${score.score} ${score.severity}</span>
+                        </div>
+                        <code class="text-xs font-mono text-zinc-500 block mb-3 break-all leading-relaxed">${score.vector}</code>
+                        <div class="flex gap-2 flex-wrap">
+                            <a href="${calcUrl}" class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all"
+                               style="background:rgb(var(--accent) / 0.08);border:1px solid rgb(var(--accent) / 0.2);color:rgb(var(--accent-fg));">
+                                <i class="ph ph-calculator text-[10px]"></i>Open in Calculator
+                            </a>
+                            <button onclick="openConverter('${score.version}','${score.vector}')"
+                                    class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all"
+                                    style="background:rgb(var(--zinc-700) / 0.15);border:1px solid rgb(var(--zinc-700) / 0.25);color:#94a3b8;">
+                                <i class="ph ph-arrows-left-right text-[10px]"></i>Convert
+                            </button>
+                            <button onclick="copyText('${score.vector}', this)"
+                                    class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all"
+                                    style="background:rgb(var(--zinc-700) / 0.1);border:1px solid rgb(var(--zinc-700) / 0.2);color:rgb(var(--zinc-500));">
+                                <i class="ph ph-copy text-[10px]"></i>Copy
+                            </button>
+                        </div>`;
+                }
+                scoresEl.appendChild(card);
+            });
+
+            // References
+            const refs = data.references || [];
+            const refsCard = document.getElementById('res-refs-card');
+            const refsList = document.getElementById('res-refs');
+            if (refs.length) {
+                refsCard.classList.remove('hidden');
+                refsList.innerHTML = refs.map(url => `
+                    <li><a href="${url}" target="_blank" rel="noopener noreferrer"
+                           class="text-xs text-zinc-500 hover:text-amber-500 transition-colors break-all">
+                        <i class="ph ph-arrow-square-out mr-1.5 opacity-50 text-[9px]"></i>${url}
+                    </a></li>`).join('');
+            } else {
+                refsCard.classList.add('hidden');
+            }
+        }
+
+        function openConverter(version, vector) {
+            window.location.href = `/?tool=converter&from=${encodeURIComponent(version)}&vector=${encodeURIComponent(vector)}`;
+        }
+
+        function copyText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-check text-green-400 text-[10px]"></i><span style="color:rgb(var(--green-400))">Copied</span>';
+                setTimeout(() => btn.innerHTML = orig, 1500);
+            });
+        }
+
+        // Recent searches
+        function addRecent(cveId) {
+            recentSearches = [cveId, ...recentSearches.filter(x => x !== cveId)].slice(0, 8);
+            localStorage.setItem('cve_recent', JSON.stringify(recentSearches));
+            renderRecent();
+        }
+
+        function renderRecent() {
+            const wrap = document.getElementById('recent-wrap');
+            const list = document.getElementById('recent-list');
+            if (!recentSearches.length) { wrap.classList.add('hidden'); return; }
+            wrap.classList.remove('hidden');
+            list.innerHTML = recentSearches.map(id => `
+                <button onclick="searchDirect('${id}')"
+                        class="text-xs px-3 py-1.5 rounded-lg font-mono transition-all"
+                        style="background:rgb(var(--zinc-800) / 0.5);border:1px solid rgb(var(--zinc-700) / 0.2);color:rgb(var(--zinc-500));">
+                    ${id}
+                </button>`).join('');
+        }
+
+        function searchDirect(cveId) {
+            document.getElementById('cve-input').value = cveId;
+            doSearch(null);
+        }
+
+        // Handle ?tool=converter&from=...&vector=... passthrough from CVE search
+        window.addEventListener('DOMContentLoaded', () => {
+            renderRecent();
+            // Pre-fill from URL if present (e.g. direct link)
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            if (q) {
+                document.getElementById('cve-input').value = q.toUpperCase();
+                doSearch(null);
+            }
+        });
+
+        // ── Analytics (GA4 via track()) ──────────────────────────────
+
+        // Wrap doSearch to track submit, success, and error
+        const _origDoSearch = doSearch;
+        doSearch = async function(e) {
+            const cveId = document.getElementById('cve-input').value.trim().toUpperCase();
+            if (/^CVE-\d{4}-\d{4,}$/.test(cveId)) {
+                track('cve_search_submitted', { cve_id: cveId });
+            }
+            return _origDoSearch(e);
+        };
+
+        // Wrap renderResult to track successful lookups
+        const _origRenderResult = renderResult;
+        renderResult = function(data) {
+            _origRenderResult(data);
+            // Extract highest severity for tracking
+            const scores = data.cvss_scores || {};
+            const severities = Object.values(scores).map(s => s.severity).filter(Boolean);
+            track('cve_search_success', {
+                cve_id:   data.id,
+                cached:   data.cached || false,
+                severity: severities[0] || 'unknown',
+            });
+        };
+    </script>
+
+    {% include "partials/footer.html" %}
+</body>
+</html>

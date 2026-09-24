@@ -1,0 +1,6 @@
+# Development & testing (not installed in the Docker image)
+-r requirements.txt
+pytest>=7.4.0
+pytest-cov>=4.1.0
+cvss>=3.2          # reference CVSS implementation, used by tests/test_reference_scores.py
+pyflakes>=3.0      # lint: python -m pyflakes app main.py tests

@@ -1,0 +1,21 @@
+{
+  "name": "CVSS Guru",
+  "short_name": "CVSS Guru",
+  "description": "CVSS calculator, converter and CVE lookup for v2.0, v3.0, v3.1 and v4.0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0b10",
+  "theme_color": "#0a0b10",
+  "icons": [
+    {
+      "src": "/static/brand/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/brand/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

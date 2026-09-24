@@ -1,0 +1,194 @@
+[
+ {
+  "id": "CVE-2024-21913",
+  "latency": 2.31,
+  "cost": 0.00021195,
+  "tokens_in": 1045,
+  "tokens_out": 299,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-27396",
+  "latency": 2.94,
+  "cost": 0.00026715,
+  "tokens_in": 1065,
+  "tokens_out": 386,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-30496",
+  "latency": 2.34,
+  "cost": 0.0003252,
+  "tokens_in": 1004,
+  "tokens_out": 291,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2021-47479",
+  "latency": 2.93,
+  "cost": 0.0004365,
+  "tokens_in": 1390,
+  "tokens_out": 380,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-35856",
+  "latency": 2.58,
+  "cost": 0.00022404,
+  "tokens_in": 1036,
+  "tokens_out": 325,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "N",
+   "I": "N",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-23605",
+  "latency": 2.22,
+  "cost": 0.00033195,
+  "tokens_in": 1009,
+  "tokens_out": 301,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2023-42092",
+  "latency": 3.7,
+  "cost": 0.0002187,
+  "tokens_in": 1074,
+  "tokens_out": 303,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-24303",
+  "latency": 2.99,
+  "cost": 0.0002337,
+  "tokens_in": 1026,
+  "tokens_out": 340,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-27030",
+  "latency": 13.88,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-24905",
+  "latency": 13.32,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-0678",
+  "latency": 13.45,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-0323",
+  "latency": 13.6,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-25567",
+  "latency": 13.21,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-21500",
+  "latency": 13.64,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-22426",
+  "latency": 13.03,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ }
+]

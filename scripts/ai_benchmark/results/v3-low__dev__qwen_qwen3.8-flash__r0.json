@@ -1,0 +1,194 @@
+[
+ {
+  "id": "CVE-2024-21913",
+  "latency": 41.09,
+  "cost": 0.000458054,
+  "tokens_in": 1302,
+  "tokens_out": 851,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-27396",
+  "latency": 30.06,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'qwen/qwen3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add y"
+ },
+ {
+  "id": "CVE-2024-30496",
+  "latency": 31.04,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'qwen/qwen3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add y"
+ },
+ {
+  "id": "CVE-2021-47479",
+  "latency": 52.91,
+  "cost": 0.001398526,
+  "tokens_in": 1628,
+  "tokens_out": 2529,
+  "metrics": {
+   "AV": "L",
+   "AC": "H",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-35856",
+  "latency": 15.87,
+  "cost": 0.000507446,
+  "tokens_in": 1293,
+  "tokens_out": 740,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-23605",
+  "latency": 26.15,
+  "cost": 0.000377454,
+  "tokens_in": 1266,
+  "tokens_out": 691,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2023-42092",
+  "latency": 28.73,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'qwen/qwen3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add y"
+ },
+ {
+  "id": "CVE-2024-24303",
+  "latency": 31.55,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'qwen/qwen3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add y"
+ },
+ {
+  "id": "CVE-2024-27030",
+  "latency": 66.83,
+  "cost": 0.001632064,
+  "tokens_in": 1286,
+  "tokens_out": 3354,
+  "metrics": {
+   "AV": "L",
+   "AC": "H",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-24905",
+  "latency": 25.93,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'qwen/qwen3.8-flash is temporarily rate-limited upstream. Please retry shortly, or add y"
+ },
+ {
+  "id": "CVE-2024-0678",
+  "latency": 19.88,
+  "cost": 0.000441474,
+  "tokens_in": 1345,
+  "tokens_out": 802,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "C",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-0323",
+  "latency": 113.41,
+  "cost": 0.002873884,
+  "tokens_in": 1274,
+  "tokens_out": 6000,
+  "error": "AttributeError: 'NoneType' object has no attribute 'strip'"
+ },
+ {
+  "id": "CVE-2024-25567",
+  "latency": 24.55,
+  "cost": 0.000658764,
+  "tokens_in": 1252,
+  "tokens_out": 1294,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-21500",
+  "latency": 95.37,
+  "cost": 0.002875534,
+  "tokens_in": 1285,
+  "tokens_out": 6000,
+  "error": "AttributeError: 'NoneType' object has no attribute 'strip'"
+ },
+ {
+  "id": "CVE-2024-22426",
+  "latency": 24.42,
+  "cost": 0.000397754,
+  "tokens_in": 1276,
+  "tokens_out": 731,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ }
+]

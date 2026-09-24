@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ static_url('favicon.svg') }}">
+    {% set section = "api" %}{% set seo = seo_page("api-reference") %}{% include "partials/theme_head.html" %}
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/regular/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/fill/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/fonts/fonts.css') }}">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { min-height: 100vh; }
+
+        .glass-card { background: rgb(var(--surface) / 0.7); border: 1px solid rgb(var(--zinc-700) / 0.25); border-radius: 16px; backdrop-filter: blur(12px); }
+
+        .nav-category {
+            display: flex; align-items: center; gap: 8px;
+            background: rgb(var(--surface) / 0.7); border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 14px; padding: 11px 22px;
+            color: rgb(var(--zinc-500)); font-weight: 600; font-size: 0.875rem;
+            text-decoration: none; transition: all 0.2s; cursor: pointer;
+        }
+        .nav-category:hover { background: rgb(var(--zinc-800) / 0.8); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.5); }
+        .nav-category.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.45); color: rgb(var(--accent-fg)); }
+        .cat-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; background:rgb(var(--zinc-700) / 0.3); }
+        .nav-category.active .cat-icon { background: rgb(var(--accent) / 0.2); color: rgb(var(--accent-fg)); }
+        .version-tab {
+            background: rgb(var(--zinc-800) / 0.4); border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px; padding: 7px 16px; color: rgb(var(--zinc-500));
+            font-weight: 500; font-size: 0.8rem; text-decoration: none;
+            display: inline-flex; align-items: center; transition: all 0.2s;
+        }
+        .version-tab:hover { background: rgb(var(--zinc-800) / 0.7); color: rgb(var(--zinc-300)); }
+        .version-tab.active { background: rgb(var(--accent) / 0.12); border-color: rgb(var(--accent) / 0.4); color: rgb(var(--accent-fg)); }
+
+        /* Sidebar */
+        .sidebar { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgb(var(--zinc-700) / 0.3) transparent; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgb(var(--zinc-700) / 0.3); border-radius: 2px; }
+        .sidebar-section { margin-bottom: 24px; }
+        .sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgb(var(--zinc-600)); margin-bottom: 8px; padding: 0 8px; }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px; border-radius: 8px; font-size: 0.8rem;
+            color: rgb(var(--zinc-500)); text-decoration: none; transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        .sidebar-link:hover { background: rgb(var(--zinc-800) / 0.5); color: rgb(var(--zinc-300)); }
+        .sidebar-link.active { background: rgb(var(--accent) / 0.1); border-color: rgb(var(--accent) / 0.2); color: rgb(var(--accent-fg)); }
+
+        /* Method badges */
+        .badge-post { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: rgb(var(--green-400)); }
+        .badge-get  { background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.3);  color: rgb(var(--green-400)); }
+
+        .method-badge { font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.05em; }
+
+        /* Code blocks */
+        pre {
+            background: rgba(2,6,23,0.8); border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px; padding: 16px; font-family: 'Courier New', monospace;
+            font-size: 0.78rem; line-height: 1.6; overflow-x: auto; color: rgb(var(--zinc-400));
+            position: relative;
+        }
+        .token-key    { color: rgb(var(--accent-fg)); }
+        .token-str    { color: #86efac; }
+        .token-num    { color: rgb(var(--amber-400)); }
+        .token-null   { color: rgb(var(--red-400)); }
+        .token-bool   { color: #c084fc; }
+        .token-comment{ color: rgb(var(--zinc-600)); font-style: italic; }
+
+        /* Endpoint card */
+        .endpoint-card { scroll-margin-top: 80px; }
+        .endpoint-path { font-family: 'Courier New', monospace; font-size: 0.9rem; color: rgb(var(--zinc-200)); }
+
+        /* Param table */
+        .param-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .param-table th { text-align: left; padding: 8px 12px; color: rgb(var(--zinc-600)); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid rgb(var(--zinc-700) / 0.2); }
+        .param-table td { padding: 8px 12px; color: rgb(var(--zinc-400)); border-bottom: 1px solid rgb(var(--zinc-700) / 0.1); vertical-align: top; }
+        .param-table td:first-child { font-family: 'Courier New', monospace; color: rgb(var(--accent-fg)); white-space: nowrap; }
+        .param-table td .req { color: rgb(var(--red-400)); font-size: 0.65rem; font-weight: 700; margin-left: 4px; }
+        .param-table td .opt { color: rgb(var(--zinc-600)); font-size: 0.65rem; margin-left: 4px; }
+
+        /* Copy button */
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgb(var(--zinc-800) / 0.8); border: 1px solid rgb(var(--zinc-700) / 0.3);
+            border-radius: 6px; padding: 4px 8px; color: rgb(var(--zinc-500));
+            font-size: 0.7rem; cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .copy-btn:hover { color: rgb(var(--zinc-200)); border-color: rgb(var(--zinc-700) / 0.5); }
+
+        /* Base URL bar */
+        .base-url-bar {
+            background: rgba(2,6,23,0.7); border: 1px solid rgb(var(--accent) / 0.25);
+            border-radius: 10px; padding: 10px 16px;
+            font-family: 'Courier New', monospace; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar { position: static; }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+</head>
+<body class="text-zinc-200">
+
+    {% include "partials/header.html" %}
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+
+        {% set active_category = "api" %}
+        {% include "partials/nav.html" %}
+
+        <div class="grid lg:grid-cols-[220px_1fr] gap-8 items-start">
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="glass-card p-4">
+                    <div class="sidebar-section">
+                        <div class="sidebar-label">Getting Started</div>
+                        <a href="#overview"        class="sidebar-link active">Overview</a>
+                        <a href="#base-url"        class="sidebar-link">Base URL</a>
+                        <a href="#authentication"  class="sidebar-link">Authentication</a>
+                        <a href="#limits"          class="sidebar-link">Limits &amp; RapidAPI</a>
+                        <a href="#errors"          class="sidebar-link">Errors</a>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-label">Calculate</div>
+                        <a href="#calc-v2"     class="sidebar-link"><span class="method-badge badge-post mr-2">POST</span>v2.0</a>
+                        <a href="#calc-v30"    class="sidebar-link"><span class="method-badge badge-post mr-2">POST</span>v3.0</a>
+                        <a href="#calc-v31"    class="sidebar-link"><span class="method-badge badge-post mr-2">POST</span>v3.1</a>
+                        <a href="#calc-v40"    class="sidebar-link"><span class="method-badge badge-post mr-2">POST</span>v4.0</a>
+                        <a href="#calc-vector" class="sidebar-link"><span class="method-badge badge-post mr-2">POST</span>From Vector</a>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-label">Convert</div>
+                        <a href="#convert"     class="sidebar-link"><span class="method-badge badge-post mr-2">POST</span>Convert</a>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-label">CVE</div>
+                        <a href="#cve-lookup"  class="sidebar-link"><span class="method-badge badge-get mr-2">GET</span>CVE Lookup</a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main content -->
+            <div class="space-y-8 min-w-0">
+
+                <!-- Overview -->
+                <section id="overview" class="endpoint-card glass-card p-7">
+                    <h1 class="h-page mb-2">API Reference</h1>
+                    <p class="text-zinc-400 leading-relaxed mb-5">
+                        The CVSS Guru REST API lets you calculate and convert CVSS scores programmatically.
+                        All endpoints accept and return <strong class="text-zinc-200">JSON</strong>.
+                        Requests are authenticated with an API key.
+                    </p>
+                    {% if local_mode %}
+                    <p class="local-badge mb-5"><i class="ph ph-house-line"></i>Local mode: no API key needed — calls to /api/v1 are unauthenticated and unmetered.</p>
+                    {% endif %}
+                    <div class="flex flex-wrap gap-3 text-sm">
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background:rgb(var(--accent) / 0.08);border:1px solid rgb(var(--accent) / 0.2);color:rgb(var(--accent-fg));">
+                            <i class="ph ph-key text-[10px]"></i>API key required
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background:rgb(var(--accent) / 0.08);border:1px solid rgb(var(--accent) / 0.2);color:rgb(var(--accent-fg));">
+                            <i class="ph ph-code text-[10px]"></i>JSON request &amp; response
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);color:#a5b4fc;">
+                            <i class="ph ph-shield text-[10px]"></i>CVSS v2.0 · v3.0 · v3.1 · v4.0
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Base URL -->
+                <section id="base-url" class="endpoint-card glass-card p-7">
+                    <h2 class="h-section mb-4">Base URL</h2>
+                    <div class="base-url-bar">
+                        <span class="text-amber-500 font-bold text-xs">BASE</span>
+                        <span class="text-zinc-200">https://cvss.guru/api/v1</span>
+                        <button onclick="copyText('https://cvss.guru/api/v1', this)" class="ml-auto text-zinc-600 hover:text-zinc-300 text-xs transition-colors">
+                            <i class="ph ph-copy"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-zinc-500 mt-3">All endpoints below are relative to this base URL. Use <code class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">Content-Type: application/json</code> for all POST requests.</p>
+                </section>
+
+                <!-- Authentication -->
+                <section id="authentication" class="endpoint-card glass-card p-7">
+                    <h2 class="h-section mb-2">Authentication</h2>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-5">
+                        All <code class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">/api/v1/*</code> endpoints require a valid API key.
+                        Get your key from your <a href="/profile" class="text-amber-500 hover:text-amber-400 font-medium">profile page</a>
+                        (free account, email confirmation required). The key is shown only once: store it safely.
+                    </p>
+
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Supported headers</p>
+                    <div class="grid sm:grid-cols-2 gap-3 mb-5 text-sm">
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <p class="font-mono text-amber-400 text-xs mb-1">Authorization: Bearer &lt;key&gt;</p>
+                            <p class="text-zinc-500 text-xs">RFC 6750 standard — recommended</p>
+                        </div>
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <p class="font-mono text-amber-400 text-xs mb-1">X-API-Key: &lt;key&gt;</p>
+                            <p class="text-zinc-500 text-xs">Alternative header for simpler clients</p>
+                        </div>
+                    </div>
+
+                    <p class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Examples</p>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button><span class="token-comment"># Using Authorization: Bearer</span>
+curl -X POST https://cvss.guru/api/v1/calculate/vector \
+  -H <span class="token-str">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{"vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}'</span>
+
+<span class="token-comment"># Using X-API-Key</span>
+curl -X POST https://cvss.guru/api/v1/calculate/vector \
+  -H <span class="token-str">"X-API-Key: YOUR_API_KEY"</span> \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{"vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}'</span></pre>
+
+                    <div class="mt-4 flex items-start gap-3 px-4 py-3 rounded-lg text-sm" style="background:rgb(var(--red-400) / 0.06);border:1px solid rgb(var(--red-400) / 0.2);">
+                        <i class="ph ph-warning text-red-400 mt-0.5 flex-shrink-0"></i>
+                        <p class="text-zinc-400">Requests without a valid API key receive <code class="bg-zinc-800 px-1 rounded text-red-400">401 Unauthorized</code>. Keep your key secret — regenerate it from your profile if compromised.</p>
+                    </div>
+                </section>
+
+                <!-- Limits & RapidAPI -->
+                <section id="limits" class="endpoint-card glass-card p-7">
+                    <h2 class="h-section mb-2">Limits &amp; RapidAPI</h2>
+                    <div class="grid sm:grid-cols-2 gap-3 mb-5 text-sm">
+                        <div class="bg-zinc-900/50 rounded-lg p-4 border border-zinc-700/30">
+                            <p class="text-zinc-200 font-semibold mb-1"><i class="ph ph-key mr-1.5 text-amber-500"></i>Free API key</p>
+                            <p class="text-zinc-500 text-xs leading-relaxed">
+                                {{ monthly_limit }} calls per month per key (every authenticated call counts),
+                                and reset on the 1st of each month (UTC). Your usage is shown on your profile.
+                            </p>
+                        </div>
+                        <div class="bg-zinc-900/50 rounded-lg p-4 border border-zinc-700/30">
+                            <p class="text-zinc-200 font-semibold mb-1"><i class="ph ph-rocket-launch mr-1.5 text-amber-500"></i>Higher volumes: RapidAPI</p>
+                            <p class="text-zinc-500 text-xs leading-relaxed">
+                                The same endpoints, with plans and billing handled by RapidAPI. Authenticate with your
+                                <code class="bg-zinc-800 px-1 rounded text-zinc-300">X-RapidAPI-Key</code> instead of a CVSS Guru key.
+                                {% if rapidapi_url %}<a href="{{ rapidapi_url }}" target="_blank" rel="noopener" class="text-amber-500 hover:text-amber-400 font-medium whitespace-nowrap">Open on RapidAPI <i class="ph ph-arrow-square-out"></i></a>{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-3">
+                        When the monthly quota of a free key is used up, the API answers
+                        <code class="bg-zinc-800 px-1 rounded text-red-400">429 Too Many Requests</code>:
+                    </p>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>{
+  <span class="token-key">"success"</span>: <span class="token-num">false</span>,
+  <span class="token-key">"error"</span>: <span class="token-str">"Monthly API limit reached"</span>,
+  <span class="token-key">"limit"</span>: <span class="token-num">{{ monthly_limit }}</span>,
+  <span class="token-key">"used"</span>: <span class="token-num">{{ monthly_limit }}</span>{% if rapidapi_url %},
+  <span class="token-key">"rapidapi_url"</span>: <span class="token-str">"{{ rapidapi_url }}"</span>{% endif %}
+}</pre>
+                    <p class="text-sm text-zinc-500 mt-4">
+                        Machine-readable spec: <a href="/openapi.json" class="text-amber-500 hover:text-amber-400 font-mono text-xs">/openapi.json</a>
+                        · <a href="/openapi.yaml" class="text-amber-500 hover:text-amber-400 font-mono text-xs">/openapi.yaml</a>
+                        · interactive docs at <a href="/docs" class="text-amber-500 hover:text-amber-400 font-mono text-xs">/docs</a>.
+                    </p>
+                </section>
+
+                <!-- Errors -->
+                <section id="errors" class="endpoint-card glass-card p-7">
+                    <h2 class="h-section mb-4">Error Handling</h2>
+                    <p class="text-sm text-zinc-400 mb-4">Errors return a JSON object with <code class="bg-zinc-800 px-1 rounded text-zinc-300">"success": false</code>, an <code class="bg-zinc-800 px-1 rounded text-zinc-300">error</code> message and an appropriate HTTP status code.</p>
+                    <div class="grid sm:grid-cols-3 gap-3 mb-5 text-sm">
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <span class="font-mono text-amber-400">400</span>
+                            <p class="text-zinc-500 text-xs mt-1">Invalid metric value or calculation error</p>
+                        </div>
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <span class="font-mono text-amber-400">401</span>
+                            <p class="text-zinc-500 text-xs mt-1">Missing or invalid API key</p>
+                        </div>
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <span class="font-mono text-amber-400">404</span>
+                            <p class="text-zinc-500 text-xs mt-1">CVE not found in NVD</p>
+                        </div>
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <span class="font-mono text-amber-400">422</span>
+                            <p class="text-zinc-500 text-xs mt-1">Missing required field or invalid format</p>
+                        </div>
+                        <div class="bg-zinc-900/50 rounded-lg p-3 border border-zinc-700/30">
+                            <span class="font-mono text-amber-400">429</span>
+                            <p class="text-zinc-500 text-xs mt-1">Monthly quota of a free key reached</p>
+                        </div>
+                    </div>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button><span class="token-comment">// Error response shape</span>
+{
+  <span class="token-key">"success"</span>: <span class="token-num">false</span>,
+  <span class="token-key">"error"</span>: <span class="token-str">"Invalid metric value for AV. Expected one of: N, A, L, P"</span>
+}</pre>
+                </section>
+
+                <!-- ─── CALCULATE v2.0 ─── -->
+                <section id="calc-v2" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-post">POST</span>
+                        <span class="endpoint-path">/api/v1/calculate/2.0</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Calculate a CVSS v2.0 Base (and optionally Temporal / Environmental) score.</p>
+
+                    <h3 class="h-label mb-3">Request Body</h3>
+                    <table class="param-table mb-6">
+                        <tr><th>Field</th><th>Values</th><th>Description</th></tr>
+                        <tr><td>AV<span class="req">req</span></td><td>L · A · N</td><td>Attack Vector</td></tr>
+                        <tr><td>AC<span class="req">req</span></td><td>H · M · L</td><td>Attack Complexity</td></tr>
+                        <tr><td>Au<span class="req">req</span></td><td>M · S · N</td><td>Authentication</td></tr>
+                        <tr><td>C<span class="req">req</span></td><td>N · P · C</td><td>Confidentiality Impact</td></tr>
+                        <tr><td>I<span class="req">req</span></td><td>N · P · C</td><td>Integrity Impact</td></tr>
+                        <tr><td>A<span class="req">req</span></td><td>N · P · C</td><td>Availability Impact</td></tr>
+                        <tr><td>E<span class="opt">opt</span></td><td>U · POC · F · H · ND</td><td>Exploitability (default ND)</td></tr>
+                        <tr><td>RL<span class="opt">opt</span></td><td>OF · TF · W · U · ND</td><td>Remediation Level (default ND)</td></tr>
+                        <tr><td>RC<span class="opt">opt</span></td><td>UC · UR · C · ND</td><td>Report Confidence (default ND)</td></tr>
+                    </table>
+
+                    <h3 class="h-label mb-3">Example</h3>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl -X POST https://cvss.guru/api/v1/calculate/2.0 \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{
+    "AV": "N", "AC": "L", "Au": "N",
+    "C": "C", "I": "C", "A": "C"
+  }'</span></pre>
+
+                    <h3 class="h-label mt-5 mb-3">Response</h3>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>{
+  <span class="token-key">"version"</span>: <span class="token-str">"2.0"</span>,
+  <span class="token-key">"vector"</span>:  <span class="token-str">"AV:N/AC:L/Au:N/C:C/I:C/A:C"</span>,
+  <span class="token-key">"scores"</span>: {
+    <span class="token-key">"base"</span>:          { <span class="token-key">"score"</span>: <span class="token-num">10.0</span>, <span class="token-key">"severity"</span>: <span class="token-str">"High"</span> },
+    <span class="token-key">"temporal"</span>:      <span class="token-null">null</span>,
+    <span class="token-key">"environmental"</span>: <span class="token-null">null</span>
+  },
+  <span class="token-key">"metrics"</span>: { <span class="token-key">"AV"</span>: <span class="token-str">"N"</span>, <span class="token-key">"AC"</span>: <span class="token-str">"L"</span>, <span class="token-str">...</span> }
+}</pre>
+                </section>
+
+                <!-- ─── CALCULATE v3.0 ─── -->
+                <section id="calc-v30" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-post">POST</span>
+                        <span class="endpoint-path">/api/v1/calculate/3.0</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Calculate a CVSS v3.0 score. Same schema as v3.1 — use <code class="bg-zinc-800 px-1 rounded text-zinc-300">/3.1</code> for newer CVEs.</p>
+                    <table class="param-table mb-6">
+                        <tr><th>Field</th><th>Values</th><th>Description</th></tr>
+                        <tr><td>AV<span class="req">req</span></td><td>N · A · L · P</td><td>Attack Vector</td></tr>
+                        <tr><td>AC<span class="req">req</span></td><td>L · H</td><td>Attack Complexity</td></tr>
+                        <tr><td>PR<span class="req">req</span></td><td>N · L · H</td><td>Privileges Required</td></tr>
+                        <tr><td>UI<span class="req">req</span></td><td>N · R</td><td>User Interaction</td></tr>
+                        <tr><td>S<span class="req">req</span></td><td>U · C</td><td>Scope</td></tr>
+                        <tr><td>C<span class="req">req</span></td><td>N · L · H</td><td>Confidentiality Impact</td></tr>
+                        <tr><td>I<span class="req">req</span></td><td>N · L · H</td><td>Integrity Impact</td></tr>
+                        <tr><td>A<span class="req">req</span></td><td>N · L · H</td><td>Availability Impact</td></tr>
+                        <tr><td>E · RL · RC<span class="opt">opt</span></td><td>X · …</td><td>Temporal metrics (default X)</td></tr>
+                        <tr><td>CR · IR · AR · M*<span class="opt">opt</span></td><td>X · …</td><td>Environmental metrics (default X)</td></tr>
+                    </table>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl -X POST https://cvss.guru/api/v1/calculate/3.0 \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{
+    "AV": "N", "AC": "L", "PR": "N",
+    "UI": "N", "S": "U",
+    "C": "H", "I": "H", "A": "H"
+  }'</span></pre>
+                </section>
+
+                <!-- ─── CALCULATE v3.1 ─── -->
+                <section id="calc-v31" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-post">POST</span>
+                        <span class="endpoint-path">/api/v1/calculate/3.1</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Calculate a CVSS v3.1 score. Identical schema to v3.0.</p>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl -X POST https://cvss.guru/api/v1/calculate/3.1 \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{
+    "AV": "N", "AC": "L", "PR": "N",
+    "UI": "N", "S": "C",
+    "C": "H", "I": "H", "A": "H"
+  }'</span>
+
+<span class="token-comment">// Response</span>
+{
+  <span class="token-key">"version"</span>: <span class="token-str">"3.1"</span>,
+  <span class="token-key">"vector"</span>:  <span class="token-str">"CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"</span>,
+  <span class="token-key">"scores"</span>: {
+    <span class="token-key">"base"</span>: { <span class="token-key">"score"</span>: <span class="token-num">10.0</span>, <span class="token-key">"severity"</span>: <span class="token-str">"Critical"</span> },
+    <span class="token-key">"temporal"</span>: <span class="token-null">null</span>, <span class="token-key">"environmental"</span>: <span class="token-null">null</span>
+  },
+  <span class="token-key">"metrics"</span>: { <span class="token-key">"AV"</span>: <span class="token-str">"N"</span>, <span class="token-str">...</span> }
+}</pre>
+                </section>
+
+                <!-- ─── CALCULATE v4.0 ─── -->
+                <section id="calc-v40" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-post">POST</span>
+                        <span class="endpoint-path">/api/v1/calculate/4.0</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Calculate a CVSS v4.0 score. v4.0 splits impact into Vulnerable System and Subsequent System components.</p>
+                    <table class="param-table mb-6">
+                        <tr><th>Field</th><th>Values</th><th>Description</th></tr>
+                        <tr><td>AV<span class="req">req</span></td><td>N · A · L · P</td><td>Attack Vector</td></tr>
+                        <tr><td>AC<span class="req">req</span></td><td>L · H</td><td>Attack Complexity</td></tr>
+                        <tr><td>AT<span class="req">req</span></td><td>N · P</td><td>Attack Requirements</td></tr>
+                        <tr><td>PR<span class="req">req</span></td><td>N · L · H</td><td>Privileges Required</td></tr>
+                        <tr><td>UI<span class="req">req</span></td><td>N · P · A</td><td>User Interaction</td></tr>
+                        <tr><td>VC · VI · VA<span class="req">req</span></td><td>N · L · H</td><td>Vulnerable System C/I/A</td></tr>
+                        <tr><td>SC · SI · SA<span class="opt">opt</span></td><td>N · L · H</td><td>Subsequent System C/I/A</td></tr>
+                        <tr><td>E<span class="opt">opt</span></td><td>X · A · P · U</td><td>Exploit Maturity (default X)</td></tr>
+                    </table>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl -X POST https://cvss.guru/api/v1/calculate/4.0 \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{
+    "AV": "N", "AC": "L", "AT": "N",
+    "PR": "N", "UI": "N",
+    "VC": "H", "VI": "H", "VA": "H",
+    "SC": "N", "SI": "N", "SA": "N"
+  }'</span></pre>
+                </section>
+
+                <!-- ─── CALCULATE FROM VECTOR ─── -->
+                <section id="calc-vector" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-post">POST</span>
+                        <span class="endpoint-path">/api/v1/calculate/vector</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Calculate a score directly from a vector string. The CVSS version is auto-detected from the prefix.</p>
+                    <table class="param-table mb-6">
+                        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+                        <tr><td>vector<span class="req">req</span></td><td>string</td><td>Full CVSS vector string (e.g. <code class="text-zinc-400">CVSS:3.1/AV:N/...</code>)</td></tr>
+                    </table>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl -X POST https://cvss.guru/api/v1/calculate/vector \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{"vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}'</span>
+
+<span class="token-comment">// Response — version auto-detected as 3.1</span>
+{
+  <span class="token-key">"version"</span>: <span class="token-str">"3.1"</span>,
+  <span class="token-key">"vector"</span>:  <span class="token-str">"CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"</span>,
+  <span class="token-key">"scores"</span>: {
+    <span class="token-key">"base"</span>: { <span class="token-key">"score"</span>: <span class="token-num">9.8</span>, <span class="token-key">"severity"</span>: <span class="token-str">"Critical"</span> },
+    <span class="token-key">"temporal"</span>: <span class="token-null">null</span>, <span class="token-key">"environmental"</span>: <span class="token-null">null</span>
+  },
+  <span class="token-key">"metrics"</span>: { <span class="token-key">"AV"</span>: <span class="token-str">"N"</span>, <span class="token-str">...</span> }
+}</pre>
+                </section>
+
+                <!-- ─── CONVERT ─── -->
+                <section id="convert" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-post">POST</span>
+                        <span class="endpoint-path">/api/v1/convert</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Convert a CVSS vector to a different version. The source version is auto-detected. Returns both original and converted scores.</p>
+                    <table class="param-table mb-6">
+                        <tr><th>Field</th><th>Values</th><th>Description</th></tr>
+                        <tr><td>vector<span class="req">req</span></td><td>string</td><td>Source CVSS vector string</td></tr>
+                        <tr><td>to<span class="req">req</span></td><td>2.0 · 3.0 · 3.1 · 4.0</td><td>Target CVSS version</td></tr>
+                    </table>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl -X POST https://cvss.guru/api/v1/convert \
+  -H <span class="token-str">"Content-Type: application/json"</span> \
+  -d <span class="token-str">'{
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "to": "4.0"
+  }'</span>
+
+<span class="token-comment">// Response</span>
+{
+  <span class="token-key">"from"</span>: {
+    <span class="token-key">"version"</span>: <span class="token-str">"3.1"</span>,
+    <span class="token-key">"vector"</span>:  <span class="token-str">"CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"</span>,
+    <span class="token-key">"scores"</span>:  { <span class="token-key">"base"</span>: { <span class="token-key">"score"</span>: <span class="token-num">9.8</span>, <span class="token-key">"severity"</span>: <span class="token-str">"Critical"</span> }, <span class="token-str">...</span> }
+  },
+  <span class="token-key">"to"</span>: {
+    <span class="token-key">"version"</span>: <span class="token-str">"4.0"</span>,
+    <span class="token-key">"vector"</span>:  <span class="token-str">"CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"</span>,
+    <span class="token-key">"scores"</span>:  { <span class="token-key">"base"</span>: { <span class="token-key">"score"</span>: <span class="token-num">9.3</span>, <span class="token-key">"severity"</span>: <span class="token-str">"Critical"</span> }, <span class="token-str">...</span> },
+    <span class="token-key">"metrics"</span>: { <span class="token-str">...</span> }
+  }
+}</pre>
+                </section>
+
+                <!-- ─── CVE LOOKUP ─── -->
+                <section id="cve-lookup" class="endpoint-card glass-card p-7">
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="method-badge badge-get">GET</span>
+                        <span class="endpoint-path">/api/v1/cve/{cve_id}</span>
+                    </div>
+                    <p class="text-sm text-zinc-400 mb-5">Fetch CVE details and all available CVSS scores from the NVD (National Vulnerability Database). Results are cached for 24 hours.</p>
+                    <table class="param-table mb-6">
+                        <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+                        <tr><td>cve_id<span class="req">path</span></td><td>string</td><td>CVE identifier, e.g. <code class="text-zinc-400">CVE-2021-44228</code></td></tr>
+                    </table>
+                    <pre><button class="copy-btn" onclick="copyPre(this)"><i class="ph ph-copy"></i> Copy</button>curl https://cvss.guru/api/v1/cve/CVE-2021-44228
+
+<span class="token-comment">// Response</span>
+{
+  <span class="token-key">"success"</span>:     <span class="token-bool">true</span>,
+  <span class="token-key">"cached"</span>:      <span class="token-bool">false</span>,
+  <span class="token-key">"id"</span>:          <span class="token-str">"CVE-2021-44228"</span>,
+  <span class="token-key">"published"</span>:   <span class="token-str">"2021-12-10"</span>,
+  <span class="token-key">"modified"</span>:    <span class="token-str">"2023-04-03"</span>,
+  <span class="token-key">"description"</span>: <span class="token-str">"Apache Log4j2 2.0-beta9 through 2.15.0..."</span>,
+  <span class="token-key">"weaknesses"</span>:  [<span class="token-str">"CWE-502"</span>],
+  <span class="token-key">"scores"</span>: {
+    <span class="token-key">"v2"</span>:  { <span class="token-key">"version"</span>: <span class="token-str">"2.0"</span>,  <span class="token-key">"score"</span>: <span class="token-num">9.3</span>, <span class="token-key">"severity"</span>: <span class="token-str">"HIGH"</span>,     <span class="token-key">"vector"</span>: <span class="token-str">"AV:N/AC:M/Au:N/C:C/I:C/A:C"</span> },
+    <span class="token-key">"v30"</span>: <span class="token-null">null</span>,
+    <span class="token-key">"v31"</span>: { <span class="token-key">"version"</span>: <span class="token-str">"3.1"</span>, <span class="token-key">"score"</span>: <span class="token-num">10.0</span>, <span class="token-key">"severity"</span>: <span class="token-str">"CRITICAL"</span>, <span class="token-key">"vector"</span>: <span class="token-str">"CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"</span> },
+    <span class="token-key">"v40"</span>: <span class="token-null">null</span>
+  },
+  <span class="token-key">"references"</span>: [<span class="token-str">"https://logging.apache.org/log4j/2.x/security.html"</span>, <span class="token-str">...</span>]
+}</pre>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function copyText(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-check" style="color:rgb(var(--green-400))"></i>';
+                setTimeout(() => btn.innerHTML = orig, 1500);
+            });
+        }
+
+        function copyPre(btn) {
+            const pre = btn.closest('pre');
+            const text = pre.innerText.replace(/^Copy\n?/, '').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-check"></i> Copied!';
+                btn.style.color = 'rgb(var(--green-400))';
+                setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1500);
+            });
+        }
+
+        // Sidebar active link on scroll
+        const sections = document.querySelectorAll('.endpoint-card[id]');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    const active = document.querySelector(`.sidebar-link[href="#${entry.target.id}"]`);
+                    if (active) active.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+
+        sections.forEach(s => observer.observe(s));
+    </script>
+
+    {% include "partials/footer.html" %}
+</body>
+</html>

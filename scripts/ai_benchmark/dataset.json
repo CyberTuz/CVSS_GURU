@@ -1,0 +1,317 @@
+[
+  {
+    "id": "CVE-2024-21913",
+    "category": "buffer overflow",
+    "description": "A heap-based memory buffer overflow vulnerability in Rockwell Automation Arena Simulation software could potentially allow a malicious user to insert unauthorized code into the software by overstepping the memory boundaries, which triggers an access violation.  Once inside, the threat actor can run harmful code on the system. This affects the confidentiality, integrity, and availability of the product. To trigger this, the user would unwittingly need to open a malicious file shared by the threat actor.",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-27396",
+    "category": "use-after-free",
+    "description": "In the Linux kernel, the following vulnerability has been resolved:\n\nnet: gtp: Fix Use-After-Free in gtp_dellink\n\nSince call_rcu, which is called in the hlist_for_each_entry_rcu traversal\nof gtp_dellink, is not part of the RCU read critical section, it\nis possible that the RCU grace period will pass during the traversal and\nthe key will be free.\n\nTo prevent this, it should be changed to hlist_for_each_entry_safe.",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-30496",
+    "category": "command injection",
+    "description": "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in BdThemes Element Pack Elementor Addons.This issue affects Element Pack Elementor Addons: from n/a through 5.5.3.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2021-47479",
+    "category": "race condition",
+    "description": "In the Linux kernel, the following vulnerability has been resolved:\n\nstaging: rtl8712: fix use-after-free in rtl8712_dl_fw\n\nSyzbot reported use-after-free in rtl8712_dl_fw(). The problem was in\nrace condition between r871xu_dev_remove() ->ndo_open() callback.\n\nIt's easy to see from crash log, that driver accesses released firmware\nin ->ndo_open() callback. It may happen, since driver was releasing\nfirmware _before_ unregistering netdev. Fix it by moving\nunregister_netdev() before cleaning up resources.\n\nCall Trace:\n...\n rtl871x_open_fw drivers/staging/rtl8712/hal_init.c:83 [inline]\n rtl8712_dl_fw+0xd95/0xe10 drivers/staging/rtl8712/hal_init.c:170\n rtl8712_hal_init drivers/staging/rtl8712/hal_init.c:330 [inline]\n rtl871x_hal_init+0xae/0x180 drivers/staging/rtl8712/hal_init.c:394\n netdev_open+0xe6/0x6c0 drivers/staging/rtl8712/os_intfs.c:380\n __dev_open+0x2bc/0x4d0 net/core/dev.c:1484\n\nFreed by task 1306:\n...\n release_firmware+0x1b/0x30 drivers/base/firmware_loader/main.c:1053\n r871xu_dev_remove+0xcc/0x2c0 drivers/staging/rtl8712/usb_intf.c:599\n usb_unbind_interface+0x1d8/0x8d0 drivers/usb/core/driver.c:458",
+    "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-35856",
+    "category": "Bluetooth",
+    "description": "In the Linux kernel, the following vulnerability has been resolved:\n\nBluetooth: btusb: mediatek: Fix double free of skb in coredump\n\nhci_devcd_append() would free the skb on error so the caller don't\nhave to free it again otherwise it would cause the double free of skb.\n\nReported-by : Dan Carpenter <dan.carpenter@linaro.org>",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-23605",
+    "category": "buffer overflow",
+    "description": "A heap-based buffer overflow vulnerability exists in the GGUF library header.n_kv functionality of llama.cpp Commit 18c2e17. A specially crafted .gguf file can lead to code execution. An attacker can provide a malicious file to trigger this vulnerability.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2023-42092",
+    "category": "use-after-free",
+    "description": "Foxit PDF Reader Doc Object Use-After-Free Remote Code Execution Vulnerability. This vulnerability allows remote attackers to execute arbitrary code on affected installations of Foxit PDF Reader. User interaction is required to exploit this vulnerability in that the target must visit a malicious page or open a malicious file.\n\nThe specific flaw exists within the handling of Doc objects. The issue results from the lack of validating the existence of an object prior to performing operations on the object. An attacker can leverage this vulnerability to execute code in the context of the current process. Was ZDI-CAN-21676.",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-24303",
+    "category": "SQL injection",
+    "description": "SQL Injection vulnerability in HiPresta \"Gift Wrapping Pro\" (hiadvancedgiftwrapping) module for PrestaShop before version 1.4.1, allows remote attackers to escalate privileges and obtain sensitive information via the HiAdvancedGiftWrappingGiftWrappingModuleFrontController::addGiftWrappingCartValue() method.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-27030",
+    "category": "race condition",
+    "description": "In the Linux kernel, the following vulnerability has been resolved:\n\nocteontx2-af: Use separate handlers for interrupts\n\nFor PF to AF interrupt vector and VF to AF vector same\ninterrupt handler is registered which is causing race condition.\nWhen two interrupts are raised to two CPUs at same time\nthen two cores serve same event corrupting the data.",
+    "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-24905",
+    "category": "cross-site scripting",
+    "description": "Dell Secure Connect Gateway (SCG) Policy Manager, all versions, contain(s) a Stored Cross-Site Scripting Vulnerability. An adjacent network high privileged attacker could potentially exploit this vulnerability, leading to the storage of malicious HTML or JavaScript codes in a trusted application data store. When a victim user accesses the data store through their browsers, the malicious code gets executed by the web browser in the context of the vulnerable web application. Exploitation may lead to information disclosure, session theft, or client-side request forgery.",
+    "vector": "CVSS:3.1/AV:A/AC:L/PR:H/UI:R/S:C/C:H/I:H/A:N",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-0678",
+    "category": "cross-site scripting",
+    "description": "The Order Delivery Date for WP e-Commerce plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'available-days-tf' parameter in all versions up to, and including, 1.2 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. Please note this only affects the version of the \"order-delivery-date\" plugin for WP Ecommerce which was hosted in the WordPress repository and is discontinued now. The version of the plugin hosted off of the repository titled 'Order Delivery Date' for WooCommerce is not affected.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-0323",
+    "category": "man-in-the-middle",
+    "description": "The FTP server used on the B&R\nAutomation Runtime supports unsecure encryption mechanisms, such as SSLv3,\nTLSv1.0 and TLS1.1. An network-based attacker can exploit the flaws to conduct\nman-in-the-middle attacks or to decrypt communications between the affected product\nclients.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-25567",
+    "category": "path traversal",
+    "description": "Path traversal attack is possible and write outside of the intended directory and may access sensitive information. If a file name is specified that already exists on the file system, then the original file will be overwritten.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-21500",
+    "category": "authentication bypass",
+    "description": "All versions of the package github.com/greenpau/caddy-security are vulnerable to Improper Restriction of Excessive Authentication Attempts via the two-factor authentication (2FA). Although the application blocks the user after several failed attempts to provide 2FA codes, attackers can bypass this blocking mechanism by automating the application’s full multistep 2FA process.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-22426",
+    "category": "command injection",
+    "description": "Dell RecoverPoint for Virtual Machines 5.3.x, 6.0.SP1 contains an OS Command injection vulnerability. An unauthenticated remote attacker could potentially exploit this vulnerability, leading to execute arbitrary operating system commands, which will get executed in the context of the root user, resulting in a complete system compromise.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "dev"
+  },
+  {
+    "id": "CVE-2024-2721",
+    "category": "deserialization",
+    "description": "Deserialization of Untrusted Data vulnerability in Social Media Share Buttons By Sygnoos Social Media Share Buttons.This issue affects Social Media Share Buttons: from n/a through 2.1.0.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-3875",
+    "category": "buffer overflow",
+    "description": "A vulnerability was found in Tenda F1202 1.2.0.20(408). It has been rated as critical. This issue affects the function fromNatlimit of the file /goform/Natlimit. The manipulation of the argument page leads to stack-based buffer overflow. The attack may be initiated remotely. The exploit has been disclosed to the public and may be used. The identifier VDB-260909 was assigned to this vulnerability. NOTE: The vendor was contacted early about this disclosure but did not respond in any way.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-25029",
+    "category": "privilege escalation",
+    "description": "IBM Personal Communications 14.0.6 through 15.0.1 includes a Windows service that is vulnerable to remote code execution (RCE) and local privilege escalation (LPE). The vulnerability allows any unprivileged user with network access to a target computer to run commands with full privileges in the context of NT AUTHORITY\\SYSTEM. This allows for a low privileged attacker to move laterally to affected systems and to escalate their privileges.  IBM X-Force ID:  281619.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-1884",
+    "category": "server-side request forgery",
+    "description": "This is a Server-Side Request Forgery (SSRF) vulnerability in the PaperCut NG/MF server-side module that  allows an attacker to induce the server-side application to make HTTP requests to an arbitrary domain of the attacker's choosing.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-25418",
+    "category": "cross-site request forgery",
+    "description": "flusity-CMS v2.33 was discovered to contain a Cross-Site Request Forgery (CSRF) via the component /core/tools/delete_menu.php.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-6387",
+    "category": "Bluetooth",
+    "description": "A potential buffer overflow exists in the Bluetooth LE HCI CPC sample application in the Gecko SDK which may result in a denial of service or remote code execution",
+    "vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-24855",
+    "category": "denial of service",
+    "description": "A race condition was found in the Linux kernel's scsi device driver in lpfc_unregister_fcf_rescan() function. This can result in a null pointer dereference issue, possibly leading to a kernel panic or denial of service issue.",
+    "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-0390",
+    "category": "hard-coded credentials",
+    "description": "INPRAX \"iZZi connect\" application on Android contains hard-coded MQTT queue credentials. The same MQTT queue is used by corresponding physical recuperation devices. Exploiting this vulnerability could potentially allow unauthorized access to manage and read parameters of the recuperation unit \"reQnet iZZi\".This issue affects \"iZZi connect\" application versions before 2024010401.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-22354",
+    "category": "server-side request forgery",
+    "description": "IBM WebSphere Application Server 8.5, 9.0 and IBM WebSphere Application Server Liberty 17.0.0.3 through 24.0.0.5 are vulnerable to an XML External Entity Injection (XXE) attack when processing XML data. A remote attacker could exploit this vulnerability to expose sensitive information, consume memory resources, or to conduct a server-side request forgery attack. IBM X-Force ID: 280401.",
+    "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:L",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-25152",
+    "category": "cross-site scripting",
+    "description": "Stored cross-site scripting (XSS) vulnerability in Message Board widget in Liferay Portal 7.2.0 through 7.4.2, and older unsupported versions, and Liferay DXP 7.3 before service pack 3, 7.2 before fix pack 17, and older unsupported versions allows remote authenticated users to inject arbitrary web script or HTML via the filename of an attachment.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-28114",
+    "category": "command injection",
+    "description": "Peering Manager is a BGP session management tool. There is a Server Side Template Injection vulnerability that leads to Remote Code Execution in Peering Manager <=1.8.2. As a result arbitrary commands can be executed on the operating system that is running Peering Manager. This issue has been addressed in version 1.8.3. Users are advised to upgrade. There are no known workarounds for this vulnerability.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-28715",
+    "category": "denial of service",
+    "description": "Improper access control in some Intel(R) oneAPI Toolkit and component software installers before version 4.3.2 may allow an authenticated user to potentially enable denial of service via local access.",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-27303",
+    "category": "information disclosure",
+    "description": "Improper access control in some Intel(R) Thunderbolt(TM) DCH drivers for Windows before version 88 may allow an authenticated user to potentially enable information disclosure via local access.",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:L/I:N/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-40511",
+    "category": "authentication bypass",
+    "description": "LG Simple Editor checkServer Authentication Bypass Vulnerability. This vulnerability allows remote attackers to bypass authentication on affected installations of LG Simple Editor. Authentication is not required to exploit this vulnerability.\n\nThe specific flaw exists within the checkServer method. The issue results from the exposure of plaintext credentials. An attacker can leverage this vulnerability to bypass authentication on the system.\n. Was ZDI-CAN-20013.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-1784",
+    "category": "SQL injection",
+    "description": "A vulnerability classified as problematic was found in Limbas 5.2.14. Affected by this vulnerability is an unknown functionality of the file main_admin.php. The manipulation of the argument tab_group leads to sql injection. The complexity of an attack is rather high. The exploitation appears to be difficult. The exploit has been disclosed to the public and may be used. The associated identifier of this vulnerability is VDB-254575. NOTE: The vendor was contacted early about this disclosure but did not respond in any way.",
+    "vector": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-25617",
+    "category": "denial of service",
+    "description": "Squid is an open source caching proxy for the Web supporting HTTP, HTTPS, FTP, and more. Due to a Collapse of Data into Unsafe Value bug ,Squid may be vulnerable to a Denial of Service attack against HTTP header parsing. This problem allows a remote client or a remote server to perform Denial of Service when sending oversized headers in HTTP messages. In versions of Squid prior to 6.5 this can be achieved if the request_header_max_size or reply_header_max_size settings are unchanged from the default. In Squid version 6.5 and later, the default setting of these parameters is safe. Squid will emit a critical warning in cache.log if the administrator is setting these parameters to unsafe values. Squid will not at this time prevent these settings from being changed to unsafe values. Users are advised to upgrade to version 6.5. There are no known workarounds for this vulnerability. This issue is also tracked as SQUID-2024:2",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-50886",
+    "category": "cross-site request forgery",
+    "description": "Cross-Site Request Forgery (CSRF), Incorrect Authorization vulnerability in wpWax Legal Pages.This issue affects Legal Pages: from n/a through 1.3.7.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-2111",
+    "category": "physical access",
+    "description": "The Events Manager – Calendar, Bookings, Tickets, and more! plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the physical location value in all versions up to, and including, 6.4.7.1 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers with contributor-level and above permissions to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-42855",
+    "category": "physical access",
+    "description": "This issue was addressed with improved state management. This issue is fixed in iOS 17.1 and iPadOS 17.1. An attacker with physical access may be able to silently persist an Apple ID on an erased device.",
+    "vector": "CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-33553",
+    "category": "deserialization",
+    "description": "Deserialization of Untrusted Data vulnerability in 8theme XStore Core.This issue affects XStore Core: from n/a through 5.3.5.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-34284",
+    "category": "hard-coded credentials",
+    "description": "NETGEAR RAX30 Use of Hard-coded Credentials Authentication Bypass Vulnerability. This vulnerability allows network-adjacent attackers to bypass authentication on affected installations of NETGEAR RAX30 routers. Authentication is not required to exploit this vulnerability.\n\nThe specific flaw exists within the system configuration. The system contains a hardcoded user account which can be used to access the CLI service as a low-privileged user. An attacker can leverage this vulnerability to bypass authentication on the system. Was ZDI-CAN-19660.",
+    "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-26270",
+    "category": "man-in-the-middle",
+    "description": "The Account Settings page in Liferay Portal 7.4.3.76 through 7.4.3.99, and Liferay DXP 2023.Q3 before patch 5, and 7.4 update 76 through 92 embeds the user’s hashed password in the page’s HTML source, which allows man-in-the-middle attackers to steal a user's hashed password.",
+    "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-32479",
+    "category": "privilege escalation",
+    "description": "Dell Encryption, Dell Endpoint Security Suite Enterprise, and Dell Security Management Server versions prior to 11.9.0 contain privilege escalation vulnerability due to improper ACL of the non-default installation directory. A local malicious user could potentially exploit this vulnerability by replacing binaries in installed directory and taking reverse shell of the system leading to Privilege Escalation.",
+    "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-27287",
+    "category": "cross-site scripting",
+    "description": "ESPHome is a system to control your ESP8266/ESP32 for Home Automation systems. Starting in version 2023.12.9 and prior to version 2024.2.2, editing the configuration file API in dashboard component of ESPHome version 2023.12.9 (command line installation and Home Assistant add-on) serves unsanitized data with `Content-Type: text/html; charset=UTF-8`, allowing a remote authenticated user to inject arbitrary web script and exfiltrate session cookies via Cross-Site scripting. It is possible for a malicious authenticated user to inject arbitrary Javascript in configuration files using a POST request to the /edit endpoint, the configuration parameter allows to specify the file to write. To trigger the XSS vulnerability, the victim must visit the page` /edit?configuration=[xss file]`. Abusing this vulnerability a malicious actor could perform operations on the dashboard on the behalf of a logged user, access sensitive information, create, edit and delete configuration files and flash firmware on managed boards.\nIn addition to this, cookies are not correctly secured, allowing the exfiltration of session cookie values. Version 2024.2.2 contains a patch for this issue.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-25125",
+    "category": "path traversal",
+    "description": "Digdag is an open source tool that to build, run, schedule, and monitor complex pipelines of tasks across various platforms. Treasure Data's digdag workload automation system is susceptible to a path traversal vulnerability if it's configured to store log files locally. This issue may lead to information disclosure and has been addressed in release version 0.10.5.1. Users are advised to upgrade. There are no known workarounds for this vulnerability.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-27301",
+    "category": "privilege escalation",
+    "description": "Improper access control in some Intel(R) Thunderbolt(TM) DCH drivers for Windows before version 88 may allow an authenticated user to potentially enable escalation of privilege via local access.",
+    "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-34276",
+    "category": "authentication bypass",
+    "description": "D-Link DIR-2150 SetTriggerPPPoEValidate Username Command Injection Remote Code Execution Vulnerability. This vulnerability allows network-adjacent attackers to execute arbitrary code on affected installations of D-Link DIR-2150 routers. Although authentication is required to exploit this vulnerability, the existing authentication mechanism can be bypassed.\n\nThe specific flaw exists within the SOAP API interface, which listens on TCP port 80 by default. The issue results from the lack of proper validation of a user-supplied string before using it to execute a system call. An attacker can leverage this vulnerability to execute code in the context of root. Was ZDI-CAN-20554.",
+    "vector": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-2527",
+    "category": "SQL injection",
+    "description": "A vulnerability was found in MAGESH-K21 Online-College-Event-Hall-Reservation-System 1.0 and classified as critical. Affected by this issue is some unknown functionality of the file /admin/rooms.php. The manipulation of the argument room_id leads to sql injection. The attack may be launched remotely. The exploit has been disclosed to the public and may be used. The identifier of this vulnerability is VDB-256964. NOTE: The vendor was contacted early about this disclosure but did not respond in any way.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2023-33843",
+    "category": "information disclosure",
+    "description": "IBM InfoSphere Information Server 11.7 is vulnerable to cross-site scripting. This vulnerability allows users to embed arbitrary JavaScript code in the Web UI thus altering the intended functionality potentially leading to credentials disclosure within a trusted session.  IBM X-Force ID:  256544.",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N",
+    "split": "test"
+  },
+  {
+    "id": "CVE-2024-3157",
+    "category": "sandbox escape",
+    "description": "Out of bounds memory access in Compositing in Google Chrome prior to 123.0.6312.122 allowed a remote attacker who had compromised the GPU process to potentially perform a sandbox escape via specific UI gestures. (Chromium security severity: High)",
+    "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H",
+    "split": "test"
+  }
+]

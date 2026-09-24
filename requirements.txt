@@ -1,0 +1,35 @@
+# CVSS Guru Dependencies
+
+# Web Framework
+fastapi>=0.104.0,<0.130.0
+starlette>=0.27.0,<1.0.0
+uvicorn[standard]>=0.24.0
+gunicorn>=21.2.0
+
+# Templating
+jinja2>=3.1.6,<4        # 3.1.3–3.1.5 have known sandbox/xmlattr CVEs
+markdown-it-py>=3.0,<4    # Server-side rendering of the CVSS guide
+
+# Type hints
+typing-extensions>=4.8.0
+
+# Python multipart for form data
+python-multipart>=0.0.6
+
+# Structured logging
+python-json-logger>=2.0.7
+
+# Async HTTP client (OpenRouter API)
+httpx>=0.25.0
+
+# Load .env file
+python-dotenv>=1.0.0
+
+# User authentication
+psycopg[binary]>=3.2,<4   # PostgreSQL driver
+psycopg-pool>=3.2,<4      # Connection pool
+bcrypt>=4.0.0             # Password hashing
+PyJWT>=2.8.0              # JWT tokens for sessions
+
+# OpenAPI export
+pyyaml>=6.0.0,<7.0.0     # YAML serialisation for /openapi.yaml endpoint

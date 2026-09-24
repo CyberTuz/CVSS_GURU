@@ -1,0 +1,230 @@
+[
+ {
+  "id": "CVE-2024-21913",
+  "latency": 8.62,
+  "cost": 0.00050353,
+  "tokens_in": 1104,
+  "tokens_out": 719,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-27396",
+  "latency": 78.23,
+  "cost": 0.002885238,
+  "tokens_in": 1121,
+  "tokens_out": 6000,
+  "error": "AttributeError: 'NoneType' object has no attribute 'strip'"
+ },
+ {
+  "id": "CVE-2024-30496",
+  "latency": 23.5,
+  "cost": 0.000806358,
+  "tokens_in": 1061,
+  "tokens_out": 1596,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2021-47479",
+  "latency": 17.02,
+  "cost": 0.000684048,
+  "tokens_in": 1430,
+  "tokens_out": 1218,
+  "metrics": {
+   "AV": "L",
+   "AC": "H",
+   "PR": "H",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-35856",
+  "latency": 79.06,
+  "cost": 0.002881338,
+  "tokens_in": 1095,
+  "tokens_out": 6000,
+  "error": "AttributeError: 'NoneType' object has no attribute 'strip'"
+ },
+ {
+  "id": "CVE-2024-23605",
+  "latency": 15.24,
+  "cost": 0.000529168,
+  "tokens_in": 1068,
+  "tokens_out": 1004,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2023-42092",
+  "latency": 36.44,
+  "cost": 0.001249088,
+  "tokens_in": 1133,
+  "tokens_out": 2515,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-24303",
+  "latency": 13.44,
+  "cost": 0.000510908,
+  "tokens_in": 1081,
+  "tokens_out": 961,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-27030",
+  "latency": 66.12,
+  "cost": 0.002455878,
+  "tokens_in": 1088,
+  "tokens_out": 5097,
+  "metrics": {
+   "AV": "L",
+   "AC": "H",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-24905",
+  "latency": 9.46,
+  "cost": 0.000416178,
+  "tokens_in": 1120,
+  "tokens_out": 747,
+  "metrics": {
+   "AV": "A",
+   "AC": "L",
+   "PR": "H",
+   "UI": "R",
+   "S": "C",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-0678",
+  "latency": 6.18,
+  "cost": 0.000312598,
+  "tokens_in": 1147,
+  "tokens_out": 518,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "C",
+   "C": "L",
+   "I": "L",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-0323",
+  "latency": 19.85,
+  "cost": 0.000752208,
+  "tokens_in": 1076,
+  "tokens_out": 1476,
+  "metrics": {
+   "AV": "N",
+   "AC": "H",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "N",
+   "A": "N"
+  }
+ },
+ {
+  "id": "CVE-2024-25567",
+  "latency": 51.69,
+  "cost": 0.001903228,
+  "tokens_in": 1054,
+  "tokens_out": 3932,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-21500",
+  "latency": 79.02,
+  "cost": 0.002880138,
+  "tokens_in": 1087,
+  "tokens_out": 6000,
+  "error": "AttributeError: 'NoneType' object has no attribute 'strip'"
+ },
+ {
+  "id": "CVE-2024-22426",
+  "latency": 8.14,
+  "cost": 0.000287208,
+  "tokens_in": 1078,
+  "tokens_out": 486,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ }
+]

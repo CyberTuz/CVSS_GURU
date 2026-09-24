@@ -1,0 +1,149 @@
+[
+ {
+  "id": "CVE-2024-21913",
+  "latency": 13.25,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-27396",
+  "latency": 13.58,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-30496",
+  "latency": 13.13,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2021-47479",
+  "latency": 12.97,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-35856",
+  "latency": 15.69,
+  "cost": 0.00041355,
+  "tokens_in": 1253,
+  "tokens_out": 376,
+  "metrics": {
+   "AV": "L",
+   "AC": "L",
+   "PR": "L",
+   "UI": "N",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2024-23605",
+  "latency": 15.2,
+  "cost": 0.0003813,
+  "tokens_in": 1226,
+  "tokens_out": 329,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "R",
+   "S": "U",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ },
+ {
+  "id": "CVE-2023-42092",
+  "latency": 13.5,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-24303",
+  "latency": 14.28,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-27030",
+  "latency": 13.03,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-24905",
+  "latency": 12.88,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-0678",
+  "latency": 13.43,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-0323",
+  "latency": 13.18,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-25567",
+  "latency": 12.97,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-21500",
+  "latency": 13.16,
+  "cost": 0.0,
+  "tokens_in": null,
+  "tokens_out": null,
+  "error": "api: {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-2603 is temporarily rate-limited upstream. Please retry shortly"
+ },
+ {
+  "id": "CVE-2024-22426",
+  "latency": 6.73,
+  "cost": 0.0003597,
+  "tokens_in": 1238,
+  "tokens_out": 290,
+  "metrics": {
+   "AV": "N",
+   "AC": "L",
+   "PR": "N",
+   "UI": "N",
+   "S": "C",
+   "C": "H",
+   "I": "H",
+   "A": "H"
+  }
+ }
+]

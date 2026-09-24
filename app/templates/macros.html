@@ -1,0 +1,131 @@
+{# CVSS Metric Rendering Macros with Icon Support #}
+
+{# Icon mapping for each metric value #}
+{% set icon_map = {
+    'AV': {'N': 'ph-globe', 'A': 'ph-wifi-high', 'L': 'ph-desktop', 'P': 'ph-lock'},
+    'AC': {'L': 'ph-lock-open', 'H': 'ph-lock'},
+    'PR': {'N': 'ph-user-minus', 'L': 'ph-user', 'H': 'ph-shield-check'},
+    'UI': {'N': 'ph-user-minus', 'R': 'ph-user-check', 'P': 'ph-user-circle', 'A': 'ph-users'},
+    'S': {'U': 'ph-arrows-in', 'C': 'ph-arrows-out', 'N': 'ph-circle', 'S': 'ph-equals'},
+    'C': {'N': 'ph-eye-slash', 'L': 'ph-eye', 'H': 'ph-warning'},
+    'I': {'N': 'ph-shield', 'L': 'ph-shield-warning', 'H': 'ph-warning-circle'},
+    'A': {'N': 'ph-hard-drives', 'L': 'ph-hard-drives', 'H': 'ph-x-circle'},
+    'Au': {'N': 'ph-door-open', 'S': 'ph-door', 'M': 'ph-fingerprint'},
+    'E': {'ND': 'ph-question', 'U': 'ph-x', 'POC': 'ph-flask', 'F': 'ph-check', 'H': 'ph-fire'},
+    'RL': {'ND': 'ph-question', 'OF': 'ph-wrench', 'TF': 'ph-toolbox', 'W': 'ph-bandaids', 'U': 'ph-infinity'},
+    'RC': {'ND': 'ph-question', 'UC': 'ph-question', 'UR': 'ph-info', 'C': 'ph-check-circle'},
+    'CR': {'N': 'ph-minus', 'L': 'ph-caret-down', 'M': 'ph-equals', 'H': 'ph-caret-up'},
+    'IR': {'N': 'ph-minus', 'L': 'ph-caret-down', 'M': 'ph-equals', 'H': 'ph-caret-up'},
+    'AR': {'N': 'ph-minus', 'L': 'ph-caret-down', 'M': 'ph-equals', 'H': 'ph-caret-up'},
+    'CDP': {'ND': 'ph-question', 'N': 'ph-x', 'L': 'ph-arrow-down', 'LM': 'ph-arrows-horizontal', 'MH': 'ph-arrow-up', 'H': 'ph-warning'},
+    'TD': {'ND': 'ph-question', 'N': 'ph-x', 'L': 'ph-users', 'M': 'ph-users', 'H': 'ph-buildings'},
+    'AT': {'N': 'ph-check', 'P': 'ph-pause'},
+    'VC': {'N': 'ph-eye-slash', 'L': 'ph-eye', 'H': 'ph-warning'},
+    'VI': {'N': 'ph-shield', 'L': 'ph-shield-warning', 'H': 'ph-warning-circle'},
+    'VA': {'N': 'ph-hard-drives', 'L': 'ph-hard-drives', 'H': 'ph-x-circle'},
+    'SC': {'S': 'ph-link', 'N': 'ph-link-break', 'L': 'ph-eye-slash', 'H': 'ph-highlighter-circle'},
+    'SI': {'S': 'ph-link', 'N': 'ph-link-break', 'L': 'ph-eye-slash', 'H': 'ph-highlighter-circle'},
+    'SA': {'S': 'ph-link', 'N': 'ph-link-break', 'L': 'ph-eye-slash', 'H': 'ph-highlighter-circle'},
+    'MAV': {'X': 'ph-shuffle', 'N': 'ph-globe', 'A': 'ph-wifi-high', 'L': 'ph-desktop', 'P': 'ph-lock'},
+    'MAC': {'X': 'ph-shuffle', 'L': 'ph-lock-open', 'H': 'ph-lock'},
+    'MPR': {'X': 'ph-shuffle', 'N': 'ph-user-minus', 'L': 'ph-user', 'H': 'ph-shield-check'},
+    'MUI': {'X': 'ph-shuffle', 'N': 'ph-user-minus', 'R': 'ph-user-check'},
+    'MS': {'X': 'ph-shuffle', 'U': 'ph-arrows-in', 'C': 'ph-arrows-out'},
+    'MC': {'X': 'ph-shuffle', 'N': 'ph-eye-slash', 'L': 'ph-eye', 'H': 'ph-warning'},
+    'MI': {'X': 'ph-shuffle', 'N': 'ph-shield', 'L': 'ph-shield-warning', 'H': 'ph-warning-circle'},
+    'MA': {'X': 'ph-shuffle', 'N': 'ph-hard-drives', 'L': 'ph-hard-drives', 'H': 'ph-x-circle'}
+} %}
+
+{% macro get_icon(metric_name, value) %}
+    {% set metric_icons = icon_map.get(metric_name, {}) %}
+    {% set icon_class = metric_icons.get(value, 'ph-circle') %}
+    <span class="metric-icon"><i class="ph {{ icon_class }}"></i></span>
+{% endmacro %}
+
+{#
+  One metric card, shared by every CVSS version.
+    prefix       form field prefix: v2 | v3 | v31 | v4 (radio names are "<prefix>_<metric>")
+    render_url   HTMX endpoint that re-renders the score panel
+    checked      value selected by default (none when empty)
+    show_scores  show each value's formula weight (not for v4.0, which has no weights)
+  "Modified" environmental metrics reuse the base descriptions, which have no
+  "Not Defined" value: it is added here so the override can be removed again.
+  The question under the title and the explanation of the selected value are
+  hidden when the visitor turns "Show explanations" off (body.explain-off).
+#}
+{% macro _metric_card(prefix, render_url, name, label, desc, checked, show_scores=true) %}
+{% set values = desc["values"] %}
+{% set is_modified = name.startswith("M") and name not in ["MSC", "MSI", "MSA"] and "X" not in values %}
+{% if is_modified %}
+    {% set values = dict({"X": {"label": "Not Defined (X)", "desc": "Keep the base value for your environment."}}, **values) %}
+{% endif %}
+{% set question = "Different in your environment? Leave “Not Defined” to keep the base value." if is_modified else desc.get("question", "") %}
+<div class="glass-card metric-card p-4">
+    <div class="flex items-start justify-between gap-2 mb-3">
+        <div class="min-w-0">
+            <span class="font-semibold text-white">{{ label }}</span>
+            {% if question %}<p class="metric-question">{{ question }}</p>{% endif %}
+        </div>
+        <button type="button" class="info-icon flex-shrink-0" data-metric="{{ name }}" data-desc="{{ desc|tojson|forceescape }}" onclick="showHelpFromButton(this)" aria-label="More about {{ label }}">
+            <i class="ph ph-info"></i>
+        </button>
+    </div>
+    <div class="space-y-2">
+        {% for value_key, value_info in values.items() %}
+        <div class="metric-option {% if value_key == checked %}active{% endif %} flex items-center justify-between p-3 cursor-pointer"
+             data-explain="{{ value_info.get('desc', '') }}"
+             onclick="selectOption(this, '{{ name }}', '{{ value_key }}', '{{ prefix }}')">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+                {{ get_icon(name, value_key) }}
+                <div class="min-w-0">
+                    <div class="text-sm font-medium text-zinc-200 break-words">{{ value_info["label"] }}</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 flex-shrink-0 ml-2">
+                {% if show_scores and value_info.get("score") is not none %}
+                <span class="metric-weight text-xs text-zinc-400" title="Weight used by the CVSS formula">{{ value_info["score"] }}</span>
+                {% endif %}
+                <label class="relative cursor-pointer flex-shrink-0" onclick="event.stopPropagation()">
+                    <input type="radio" name="{{ prefix }}_{{ name }}" value="{{ value_key }}" class="sr-only peer"
+                           {% if value_key == checked %}checked{% endif %}
+                           hx-post="{{ render_url }}" hx-target="#{{ prefix }}-score-display" hx-trigger="change" hx-include="[name^='{{ prefix }}_']">
+                    <div class="peer w-10 h-[22px] rounded-full ring-1 ring-zinc-700/60 bg-zinc-800/80 transition-all duration-300 after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-4 after:h-4 after:rounded-full after:bg-zinc-500 after:transition-all after:duration-300 peer-checked:bg-gradient-to-r peer-checked:from-amber-600 peer-checked:to-amber-500 peer-checked:ring-amber-500/40 peer-checked:after:translate-x-[18px] peer-checked:after:bg-white"></div>
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="metric-explain" aria-live="polite">
+        {%- for value_key, value_info in values.items() if value_key == checked %}{{ value_info.get("desc", "") }}{% endfor -%}
+    </p>
+</div>
+{% endmacro %}
+
+{# Default selection per version: required metrics start on their first value,
+   optional ones on "Not Defined" (ND in v2.0, X in v3.x/v4.0). #}
+{% macro render_metric_v2(name, label, desc, optional=false) %}
+{% set keys = desc["values"].keys() | list %}
+{{ _metric_card("v2", "/api/cvss2/render", name, label, desc, "ND" if optional else keys[0]) }}
+{% endmacro %}
+
+{% macro render_metric_v3(name, label, desc, optional=false) %}
+{{ _metric_card("v3", "/api/cvss3/render", name, label, desc, "X" if optional else (desc["values"].keys() | list)[0]) }}
+{% endmacro %}
+
+{% macro render_metric_v31(name, label, desc, optional=false) %}
+{{ _metric_card("v31", "/api/cvss31/render", name, label, desc, "X" if optional else (desc["values"].keys() | list)[0]) }}
+{% endmacro %}
+
+{% macro render_metric_v4(name, label, desc, optional=false) %}
+{{ _metric_card("v4", "/api/cvss4/render", name, label, desc, "X" if optional else (desc["values"].keys() | list)[0], show_scores=false) }}
+{% endmacro %}
+
+{% macro render_severity_card(severity, range, color, description) %}
+<div class="glass-card p-6 border-l-4 hover:-translate-y-1 transition-all duration-300" style="border-left-color: {{ color }}">
+    <div class="flex items-center justify-between mb-3">
+        <h4 class="font-bold text-lg" style="color: {{ color }}">{{ severity }}</h4>
+        <span class="text-xs font-mono bg-zinc-700/50 px-3 py-1 rounded-full text-zinc-400">{{ range }}</span>
+    </div>
+    <p class="text-sm text-zinc-400">{{ description }}</p>
+</div>
+{% endmacro %}

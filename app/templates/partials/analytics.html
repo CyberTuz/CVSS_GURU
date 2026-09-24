@@ -1,0 +1,46 @@
+{# Google Analytics 4 with Consent Mode v2.
+   Analytics cookies stay off until the visitor accepts the banner (GDPR); before that
+   GA only receives cookieless pings. Advertising signals are always denied.
+   `track(name, params)` is always defined so page scripts can call it unconditionally. #}
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    window.track = function (name, params) {
+        if (window.__gaEnabled) gtag('event', name, params || {});
+    };
+</script>
+{% if ga_measurement_id and not local_mode %}
+<script>
+    window.__gaEnabled = true;
+    (function () {
+        var consent = null;
+        try { consent = localStorage.getItem('cvssguru-consent'); } catch (e) {}
+        gtag('consent', 'default', {
+            analytics_storage: consent === 'granted' ? 'granted' : 'denied',
+            ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+            wait_for_update: 500
+        });
+        gtag('js', new Date());
+        gtag('config', '{{ ga_measurement_id }}', { anonymize_ip: true });
+    })();
+
+    function setConsent(value) {
+        try { localStorage.setItem('cvssguru-consent', value); } catch (e) {}
+        gtag('consent', 'update', { analytics_storage: value });
+        var banner = document.getElementById('consent-banner');
+        if (banner) banner.hidden = true;
+    }
+
+    function openConsentBanner() {
+        var banner = document.getElementById('consent-banner');
+        if (banner) banner.hidden = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var consent = null;
+        try { consent = localStorage.getItem('cvssguru-consent'); } catch (e) {}
+        if (!consent) openConsentBanner();
+    });
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+{% endif %}

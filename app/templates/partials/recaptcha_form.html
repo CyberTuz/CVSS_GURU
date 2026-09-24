@@ -1,0 +1,43 @@
+{# Invisible reCAPTCHA v3 for the account forms (login, sign-up, forgot password).
+   Usage: add data-recaptcha-action="login" to the <form>, then include this partial after it.
+   On submit a fresh token is put in a hidden "recaptcha_token" field (checked in app/recaptcha.py). #}
+{% if recaptcha_site_key and not local_mode %}
+<p class="text-[11px] text-zinc-600 text-center mt-4">
+    Protected by reCAPTCHA — the Google
+    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-zinc-400">Privacy Policy</a> and
+    <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-zinc-400">Terms of Service</a> apply.
+</p>
+<style>.grecaptcha-badge { visibility: hidden; }</style>
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}" async defer></script>
+<script>
+(function () {
+    const SITE_KEY = {{ recaptcha_site_key | tojson }};
+    document.querySelectorAll('form[data-recaptcha-action]').forEach(function (form) {
+        form.addEventListener('submit', function (ev) {
+            if (form.dataset.recaptchaDone === '1') return;
+            ev.preventDefault();
+            const btn = form.querySelector('[type="submit"]');
+            if (btn) btn.disabled = true;
+            const finish = function (token) {
+                let input = form.querySelector('input[name="recaptcha_token"]');
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'recaptcha_token';
+                    form.appendChild(input);
+                }
+                input.value = token || '';
+                form.dataset.recaptchaDone = '1';
+                form.submit();
+            };
+            // Blocked or slow script: submit anyway, the server explains what went wrong.
+            if (typeof grecaptcha === 'undefined') { finish(''); return; }
+            grecaptcha.ready(function () {
+                grecaptcha.execute(SITE_KEY, { action: form.dataset.recaptchaAction })
+                    .then(finish, function () { finish(''); });
+            });
+        });
+    });
+})();
+</script>
+{% endif %}

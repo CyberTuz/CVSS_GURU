@@ -1,0 +1,250 @@
+{# Shared theme, included early in every <head>.
+   Colors are RGB channel tokens so they work with alpha: rgb(var(--zinc-700) / 0.3).
+   tailwind.config.js maps Tailwind's zinc/neutral/amber scales onto the same tokens, so
+   utility classes follow the active theme without per-class dark:/light: variants. #}
+{% include "partials/seo.html" %}
+{% include "partials/analytics.html" %}
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ static_url('brand/favicon-32.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ static_url('apple-touch-icon.png') }}">
+<link rel="manifest" href="/static/site.webmanifest">
+<meta name="theme-color" content="#0a0b10">
+<script>
+    (function () {
+        var t = null;
+        try { t = localStorage.getItem('theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') {
+            t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.setAttribute('data-section', '{{ section | default('brand') }}');
+    })();
+
+    function toggleTheme() {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('theme', next); } catch (e) {}
+    }
+
+</script>
+<style>
+    :root, :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg0: 9 10 15;
+        --bg1: 14 15 22;
+        --surface: 20 21 29;
+        --glow-a: 245 158 11;
+        --glow-b: 99 102 241;
+        --glow-strength: 0.09;
+
+        --zinc-50: 250 250 252;
+        --zinc-100: 244 244 247;
+        --zinc-200: 230 231 237;
+        --zinc-300: 214 215 224;
+        --zinc-400: 172 174 188;
+        --zinc-500: 138 140 155;
+        --zinc-600: 106 108 124;
+        --zinc-700: 62 64 80;
+        --zinc-800: 38 40 53;
+        --zinc-900: 26 27 37;
+        --zinc-950: 12 13 19;
+
+        --brand: 245 158 11;
+        --accent: 245 158 11;
+        --accent-fg: 251 191 36;
+        --accent-deep: 217 119 6;
+        --amber-300: 252 211 77;
+        --amber-400: 251 191 36;
+        --amber-500: 245 158 11;
+        --amber-600: 217 119 6;
+        --amber-700: 180 83 9;
+        --amber-800: 146 64 14;
+
+        --red-300: 252 165 165;
+        --red-400: 248 113 113;
+        --green-400: 74 222 128;
+
+        --card-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 10px 30px -12px rgb(0 0 0 / 0.6);
+    }
+
+    :root[data-theme="light"] {
+        color-scheme: light;
+        --bg0: 246 245 241;
+        --bg1: 239 238 233;
+        --surface: 255 255 255;
+        --glow-a: 245 158 11;
+        --glow-b: 99 102 241;
+        --glow-strength: 0.10;
+
+        /* Neutral scale is inverted: low numbers are dark text, high numbers light fills. */
+        --zinc-50: 17 17 23;
+        --zinc-100: 26 27 34;
+        --zinc-200: 40 41 50;
+        --zinc-300: 52 54 66;
+        --zinc-400: 72 74 88;
+        --zinc-500: 95 97 112;
+        --zinc-600: 112 114 130;
+        --zinc-700: 208 209 218;
+        --zinc-800: 229 229 236;
+        --zinc-900: 241 241 245;
+        --zinc-950: 250 250 251;
+
+        --brand: 217 119 6;
+        --accent: 217 119 6;
+        --accent-fg: 180 83 9;
+        --accent-deep: 180 83 9;
+        --amber-300: 180 83 9;
+        --amber-400: 180 83 9;
+        --amber-500: 217 119 6;
+        --amber-600: 194 101 6;
+        --amber-700: 180 83 9;
+        --amber-800: 146 64 14;
+
+        --red-300: 185 28 28;
+        --red-400: 220 38 38;
+        --green-400: 22 163 74;
+
+        --card-shadow: 0 1px 2px rgb(20 20 30 / 0.05), 0 12px 32px -16px rgb(20 20 30 / 0.18);
+    }
+
+    /* Section accents (AGENTS.md): calculator cyan, tools red, API indigo, docs green.
+       Everything written as accent/amber on the page follows the section; the logo keeps --brand. */
+    :root[data-section="calculator"] {
+        --accent: 6 182 212; --accent-fg: 34 211 238; --accent-deep: 8 145 178; --glow-a: 6 182 212;
+        --amber-300: 103 232 249; --amber-400: 34 211 238; --amber-500: 6 182 212; --amber-600: 8 145 178; --amber-700: 14 116 144; --amber-800: 21 94 117;
+    }
+    :root[data-theme="light"][data-section="calculator"] {
+        --accent: 8 145 178; --accent-fg: 14 116 144; --accent-deep: 14 116 144; --glow-a: 8 145 178;
+        --amber-300: 14 116 144; --amber-400: 14 116 144; --amber-500: 8 145 178; --amber-600: 14 116 144; --amber-700: 21 94 117; --amber-800: 22 78 99;
+    }
+    :root[data-section="tools"] {
+        --accent: 239 68 68; --accent-fg: 248 113 113; --accent-deep: 220 38 38; --glow-a: 239 68 68;
+        --amber-300: 252 165 165; --amber-400: 248 113 113; --amber-500: 239 68 68; --amber-600: 220 38 38; --amber-700: 185 28 28; --amber-800: 153 27 27;
+    }
+    :root[data-theme="light"][data-section="tools"] {
+        --accent: 220 38 38; --accent-fg: 185 28 28; --accent-deep: 185 28 28; --glow-a: 220 38 38;
+        --amber-300: 185 28 28; --amber-400: 185 28 28; --amber-500: 220 38 38; --amber-600: 185 28 28; --amber-700: 153 27 27; --amber-800: 127 29 29;
+    }
+    :root[data-section="api"] {
+        --accent: 99 102 241; --accent-fg: 165 180 252; --accent-deep: 79 70 229; --glow-a: 99 102 241;
+        --amber-300: 165 180 252; --amber-400: 129 140 248; --amber-500: 99 102 241; --amber-600: 79 70 229; --amber-700: 67 56 202; --amber-800: 55 48 163;
+    }
+    :root[data-theme="light"][data-section="api"] {
+        --accent: 79 70 229; --accent-fg: 67 56 202; --accent-deep: 67 56 202; --glow-a: 79 70 229;
+        --amber-300: 67 56 202; --amber-400: 67 56 202; --amber-500: 79 70 229; --amber-600: 67 56 202; --amber-700: 55 48 163; --amber-800: 49 46 129;
+    }
+    :root[data-section="docs"] {
+        --accent: 34 197 94; --accent-fg: 74 222 128; --accent-deep: 22 163 74; --glow-a: 34 197 94;
+        --amber-300: 134 239 172; --amber-400: 74 222 128; --amber-500: 34 197 94; --amber-600: 22 163 74; --amber-700: 21 128 61; --amber-800: 22 101 52;
+    }
+    :root[data-theme="light"][data-section="docs"] {
+        --accent: 22 163 74; --accent-fg: 21 128 61; --accent-deep: 21 128 61; --glow-a: 22 163 74;
+        --amber-300: 21 128 61; --amber-400: 21 128 61; --amber-500: 22 163 74; --amber-600: 21 128 61; --amber-700: 22 101 52; --amber-800: 20 83 45;
+    }
+
+    /* Code blocks stay dark in both themes: re-declare the dark tokens inside them. */
+    :root[data-theme="light"] pre,
+    :root[data-theme="light"] .base-url-bar {
+        --zinc-200: 230 231 237;
+        --zinc-300: 214 215 224;
+        --zinc-400: 172 174 188;
+        --zinc-500: 138 140 155;
+        --zinc-600: 106 108 124;
+        --zinc-700: 62 64 80;
+        --zinc-800: 38 40 53;
+        --accent-fg: 251 191 36;
+        --amber-400: 251 191 36;
+        --red-400: 248 113 113;
+    }
+
+    :root[data-theme="light"] pre,
+    :root[data-theme="light"] .base-url-bar {
+        background-color: rgb(20 21 29) !important;
+        color: rgb(var(--zinc-400));
+    }
+
+    body {
+        background:
+            radial-gradient(900px 480px at 50% -120px, rgb(var(--glow-a) / var(--glow-strength)), transparent 70%),
+            radial-gradient(700px 420px at 100% 0%, rgb(var(--glow-b) / calc(var(--glow-strength) * 0.7)), transparent 70%),
+            linear-gradient(180deg, rgb(var(--bg1)) 0%, rgb(var(--bg0)) 420px);
+        background-color: rgb(var(--bg0));
+        background-attachment: fixed;
+        min-height: 100vh;
+        color: rgb(var(--zinc-300));
+    }
+
+    .glass-card { box-shadow: var(--card-shadow); }
+
+    /* Keep the footer at the bottom of the window on short pages; on long pages it
+       stays in its normal place after the content. */
+    body > footer { position: sticky; top: 100vh; }
+
+    /* Headings written as text-white follow the theme; white text on colored fills stays white. */
+    :root[data-theme="light"] .text-white:not([class*="bg-amber"]):not([class*="bg-red"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-gradient"]):not([class*="from-"]) {
+        color: rgb(var(--zinc-50));
+    }
+    :root[data-theme="light"] .backdrop-blur-sm.bg-black\/60 { background: rgb(20 20 30 / 0.35); }
+
+    /* Heading scale: page title > section title > eyebrow label */
+    .h-page {
+        font-size: 1.5rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.025em;
+        color: rgb(var(--zinc-50));
+    }
+    @media (min-width: 768px) { .h-page { font-size: 1.875rem; } }
+    .h-sub { font-size: 0.9rem; color: rgb(var(--zinc-400)); margin-top: 0.25rem; }
+    .h-section {
+        font-size: 1.2rem; line-height: 1.3; font-weight: 750; letter-spacing: -0.015em;
+        color: rgb(var(--zinc-50));
+    }
+    .h-label {
+        font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+        color: rgb(var(--accent-fg));
+    }
+
+    /* Header logo: ink follows the theme, ".guru" uses the brand color */
+    .site-logo { display: inline-flex; color: rgb(var(--zinc-100)); text-decoration: none; }
+    .site-logo svg { max-width: 100%; height: auto; }
+    /* Pages set `* { font-family: Inter }`, which beats SVG presentation attributes */
+    .site-logo tspan { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .btn-login, .user-pill { white-space: nowrap; }
+
+    .local-badge {
+        display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        border-radius: 999px; padding: 5px 12px; font-size: 0.75rem; font-weight: 600;
+        background: rgb(var(--zinc-800) / 0.6); border: 1px dashed rgb(var(--zinc-600) / 0.7);
+        color: rgb(var(--zinc-400));
+    }
+
+    /* Cookie consent banner */
+    .consent-banner {
+        position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 60;
+        max-width: 560px; margin: 0 auto; padding: 16px 18px; border-radius: 14px;
+        background: rgb(var(--surface) / 0.96); border: 1px solid rgb(var(--zinc-700) / 0.6);
+        box-shadow: var(--card-shadow); backdrop-filter: blur(12px);
+        display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+        font-size: 0.8rem; color: rgb(var(--zinc-300));
+    }
+    .consent-banner[hidden] { display: none; }
+    .consent-banner p { flex: 1 1 260px; margin: 0; line-height: 1.5; }
+    .consent-actions { display: flex; gap: 8px; margin-left: auto; }
+    .consent-btn {
+        padding: 7px 14px; border-radius: 10px; font-weight: 600; cursor: pointer;
+        border: 1px solid rgb(var(--zinc-700) / 0.7); background: transparent; color: rgb(var(--zinc-300));
+    }
+    .consent-accept { background: rgb(var(--brand)); border-color: rgb(var(--brand)); color: #111; }
+
+    /* Theme toggle */
+    .theme-toggle {
+        width: 34px; height: 34px; border-radius: 999px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: rgb(var(--surface) / 0.7);
+        border: 1px solid rgb(var(--zinc-700) / 0.5);
+        color: rgb(var(--zinc-400));
+        transition: all 0.2s; cursor: pointer; flex-shrink: 0;
+    }
+    .theme-toggle:hover { color: rgb(var(--accent-fg)); border-color: rgb(var(--accent) / 0.5); }
+    .theme-toggle .ph-moon { display: none; }
+    :root[data-theme="light"] .theme-toggle .ph-moon { display: inline; }
+    :root[data-theme="light"] .theme-toggle .ph-sun { display: none; }
+</style>

@@ -1,0 +1,1967 @@
+{% from 'macros.html' import render_metric_v2, render_metric_v3, render_metric_v31, render_metric_v4, render_severity_card %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="{{ static_url('favicon.svg') }}">
+    
+
+    {% set section = "calculator" %}{% set seo = seo_page("home") %}{% include "partials/theme_head.html" %}
+    <script src="{{ static_url('vendor/htmx.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/regular/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/phosphor/fill/style.css') }}">
+    <link rel="stylesheet" href="{{ static_url('vendor/fonts/fonts.css') }}">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        body {
+            min-height: 100vh;
+        }
+        
+        /* Glass card */
+        .glass-card {
+            background: rgb(var(--surface) / 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 16px;
+        }
+        
+        .glass-card:hover {
+            border-color: rgb(var(--accent) / 0.2);
+        }
+
+        /* Plain-language help: question under the metric name, explanation of the selected value */
+        .metric-question {
+            margin-top: 2px;
+            font-size: 0.8rem;
+            line-height: 1.35;
+            color: rgb(var(--zinc-400));
+        }
+        .metric-explain {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: rgb(var(--zinc-300));
+            background: rgb(var(--accent) / 0.06);
+            border-left: 2px solid rgb(var(--accent) / 0.5);
+        }
+        .metric-explain:empty { display: none; }
+        body.explain-off .metric-question,
+        body.explain-off .metric-explain { display: none; }
+
+        .explain-toggle {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.8rem; font-weight: 500;
+            color: rgb(var(--zinc-400));
+            cursor: pointer; user-select: none;
+        }
+        .explain-toggle:hover { color: rgb(var(--zinc-200)); }
+        .explain-switch {
+            position: relative; width: 34px; height: 20px; border-radius: 999px;
+            background: rgb(var(--zinc-800)); box-shadow: inset 0 0 0 1px rgb(var(--zinc-700) / 0.6);
+            transition: background 0.2s;
+        }
+        .explain-switch::after {
+            content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
+            border-radius: 50%; background: rgb(var(--zinc-500)); transition: transform 0.2s, background 0.2s;
+        }
+        .explain-toggle input:checked + .explain-switch { background: rgb(var(--accent)); }
+        .explain-toggle input:checked + .explain-switch::after { transform: translateX(14px); background: #fff; }
+        .explain-toggle input:focus-visible + .explain-switch { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+
+        /* Active option */
+        .metric-option {
+            background: rgb(var(--zinc-800) / 0.4);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .metric-option:hover {
+            background: rgb(var(--zinc-800) / 0.6);
+            border-color: rgb(var(--zinc-700) / 0.25);
+        }
+
+        .metric-option.active {
+            background: rgb(var(--accent) / 0.1);
+            border-color: rgb(var(--accent) / 0.4);
+        }
+
+        .metric-option.active .option-indicator {
+            border-color: rgb(var(--accent));
+            background: rgb(var(--accent));
+            box-shadow: 0 0 12px rgb(var(--accent) / 0.5);
+        }
+        
+        .metric-option.active .option-indicator::after {
+            transform: scale(1);
+        }
+        
+        .option-indicator {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgb(var(--zinc-700));
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .option-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Two-tier navigation */
+        .nav-category {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgb(var(--surface) / 0.6);
+            border: 1px solid rgb(var(--zinc-700) / 0.25);
+            border-radius: 14px;
+            padding: 11px 22px;
+            color: rgb(var(--zinc-500));
+            font-weight: 600;
+            font-size: 0.875rem;
+            letter-spacing: 0.01em;
+            transition: all 0.2s ease;
+        }
+
+        .nav-category:hover {
+            background: rgb(var(--zinc-800) / 0.8);
+            color: rgb(var(--zinc-300));
+            border-color: rgb(var(--zinc-700) / 0.5);
+        }
+
+        .nav-category.active {
+            background: rgb(var(--accent) / 0.12);
+            border-color: rgb(var(--accent) / 0.45);
+            color: rgb(var(--accent-fg));
+            box-shadow: 0 0 16px rgb(var(--accent) / 0.08);
+        }
+
+        .nav-category .cat-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            background: rgb(var(--zinc-700) / 0.3);
+            transition: background 0.2s ease;
+        }
+
+        .nav-category.active .cat-icon {
+            background: rgb(var(--accent) / 0.2);
+            color: rgb(var(--accent-fg));
+        }
+
+        /* User zone */
+        .user-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgb(var(--surface) / 0.7); border: 1px solid rgb(var(--zinc-700) / 0.3);
+            border-radius: 999px; padding: 5px 14px 5px 7px;
+            font-size: 0.78rem; font-weight: 500; color: rgb(var(--zinc-400));
+            text-decoration: none; transition: all 0.2s;
+        }
+        .user-pill:hover { background: rgb(var(--zinc-800) / 0.8); color: rgb(var(--zinc-300)); border-color: rgb(var(--zinc-700) / 0.5); }
+        .user-avatar {
+            width: 22px; height: 22px; border-radius: 999px;
+            background: rgb(var(--accent) / 0.2); color: rgb(var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700;
+        }
+        .btn-login {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgb(var(--accent) / 0.08); border: 1px solid rgb(var(--accent) / 0.3);
+            border-radius: 999px; padding: 5px 14px;
+            font-size: 0.78rem; font-weight: 600; color: rgb(var(--accent));
+            text-decoration: none; transition: all 0.2s;
+        }
+        .btn-login:hover { background: rgb(var(--accent) / 0.15); color: rgb(var(--accent-fg)); border-color: rgb(var(--accent) / 0.5); }
+
+        .subnav-wrapper {
+            position: relative;
+        }
+
+        /* Version tabs (tier 2) */
+        .version-tab {
+            background: rgb(var(--zinc-800) / 0.4);
+            border: 1px solid rgb(var(--zinc-700) / 0.2);
+            border-radius: 10px;
+            padding: 7px 16px;
+            color: rgb(var(--zinc-500));
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .version-tab:hover {
+            background: rgb(var(--zinc-800) / 0.7);
+            color: rgb(var(--zinc-300));
+            border-color: rgb(var(--zinc-700) / 0.4);
+        }
+
+        .version-tab.active {
+            background: rgb(var(--accent) / 0.12);
+            border-color: rgb(var(--accent) / 0.4);
+            color: rgb(var(--accent-fg));
+        }
+
+        #subnav-tools .version-tab.active {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: rgb(var(--red-400));
+        }
+
+        #cat-tools.active {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: rgb(var(--red-400));
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.08);
+        }
+
+        #cat-tools.active .cat-icon {
+            background: rgba(239, 68, 68, 0.2);
+            color: rgb(var(--red-400));
+        }
+        
+        .sub-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            color: rgb(var(--zinc-400));
+            transition: all 0.2s ease;
+        }
+
+        .sub-tab:hover {
+            color: rgb(var(--zinc-200));
+        }
+
+        .sub-tab.active {
+            background: rgb(var(--accent));
+            color: rgb(var(--bg1));
+        }
+        
+        /* Score */
+        .score-display {
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.3));
+        }
+        
+        .score-badge {
+            background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        /* Action buttons */
+        .action-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgb(var(--zinc-800) / 0.6);
+            border: 1px solid rgb(var(--zinc-700) / 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(var(--zinc-400));
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgb(var(--accent) / 0.2);
+            border-color: rgb(var(--accent) / 0.4);
+            color: rgb(var(--accent));
+        }
+
+        .action-btn.active {
+            background: rgb(var(--accent) / 0.3);
+            border-color: rgb(var(--accent) / 0.6);
+            color: rgb(var(--accent));
+        }
+        
+        /* Badge NEW */
+        .badge-new {
+            background: linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--accent-deep)) 100%);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+        
+        /* Info icon */
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgb(var(--zinc-700) / 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(var(--zinc-500));
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .info-icon:hover {
+            background: rgb(var(--accent) / 0.3);
+            color: rgb(var(--accent));
+        }
+        
+        /* Metric icons */
+        .metric-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgb(var(--zinc-700) / 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(var(--zinc-400));
+            font-size: 14px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .metric-option.active .metric-icon {
+            background: rgb(var(--accent) / 0.2);
+            color: rgb(var(--accent));
+            box-shadow: 0 0 10px rgb(var(--accent) / 0.3);
+        }
+
+        .metric-option:hover .metric-icon {
+            background: rgb(var(--zinc-700) / 0.5);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgb(var(--bg0)); }
+        ::-webkit-scrollbar-thumb { background: rgb(var(--zinc-700)); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgb(var(--zinc-600)); }
+        
+        /* Section headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgb(var(--zinc-700) / 0.3);
+        }
+        
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Section type visual accent borders — requires :has() (all modern browsers) */
+        .glass-card:has(.section-icon.from-amber-500)   { border-left: 3px solid rgb(var(--accent) / 0.5);  }
+        .glass-card:has(.section-icon.from-purple-500) { border-left: 3px solid rgba(168,85,247,0.5); }
+        .glass-card:has(.section-icon.from-green-500)  { border-left: 3px solid rgba(34,197,94,0.5);  }
+        
+        /* Notification */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: slideInRight 0.3s ease;
+        }
+        
+        /* Mobile Responsiveness - Only for small screens */
+        @media (max-width: 1023px) {
+            main {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            header {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            .glass-card {
+                padding: 16px;
+            }
+            
+            .score-display {
+                font-size: 4rem;
+            }
+            
+            /* Force single column layout on mobile for all metric grids */
+            .calc-section .grid.md\\:grid-cols-2 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            main {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            
+            header {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            
+            .glass-card {
+                padding: 12px;
+            }
+            
+            .score-display {
+                font-size: 3rem;
+            }
+            
+            .nav-category {
+                padding: 9px 14px;
+                font-size: 0.8rem;
+            }
+
+            .nav-category .cat-icon {
+                width: 22px;
+                height: 22px;
+            }
+
+            .version-tab {
+                padding: 6px 11px;
+                font-size: 11px;
+            }
+
+            /* Smaller text on mobile for metric options */
+            .metric-option .text-sm {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 380px) {
+            .score-display {
+                font-size: 2.5rem;
+            }
+
+            .nav-category {
+                padding: 7px 11px;
+                font-size: 0.75rem;
+            }
+
+            .version-tab {
+                padding: 5px 9px;
+                font-size: 10px;
+            }
+        }
+        
+        /* Prevent horizontal overflow - only on mobile */
+        @media (max-width: 1023px) {
+            html, body {
+                overflow-x: hidden;
+            }
+        }
+        
+        /* Ensure sticky works on desktop */
+        .calc-section {
+            min-height: 0;
+        }
+        
+        /* Temporal Metrics - smaller text */
+        .temporal-section .metric-option .text-sm {
+            font-size: 0.8rem;
+        }
+
+        .temporal-section .font-semibold {
+            font-size: 0.9rem;
+        }
+
+        /* Gauge counter fade-in on swap */
+        @keyframes scoreFadeIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .gauge-score-value {
+            animation: scoreFadeIn 0.4s ease both;
+        }
+        .severity-badge {
+            animation: scoreFadeIn 0.4s ease 0.1s both;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+</head>
+<body class="text-zinc-200">
+    <!-- Header -->
+    {% include "partials/header.html" %}
+
+    <main class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <h1 class="sr-only">Free CVSS Calculator for CVSS v4.0, v3.1, v3.0 and v2.0</h1>
+        <!-- Two-Tier Navigation -->
+        <nav class="flex flex-col items-center mb-6 gap-0">
+            <!-- Tier 1: Desktop 3-column -->
+            <div class="hidden md:flex items-center justify-between w-full">
+                <div class="flex-1"></div>
+                <div class="flex items-center gap-3 flex-wrap justify-center">
+                <button class="nav-category active" id="cat-calculator" onclick="switchCategory('calculator')">
+                    <span class="cat-icon"><i class="ph ph-calculator"></i></span>
+                    Calculator
+                </button>
+                <button class="nav-category" id="cat-tools" onclick="switchToConverter()">
+                    <span class="cat-icon"><i class="ph ph-wrench"></i></span>
+                    Tools
+                </button>
+                <a href="/api-reference" class="nav-category">
+                    <span class="cat-icon"><i class="ph ph-plug"></i></span>
+                    API
+                </a>
+                <a href="/documentation" class="nav-category">
+                    <span class="cat-icon"><i class="ph ph-book-open"></i></span>
+                    Docs
+                </a>
+                </div>
+                <div class="flex-1 flex justify-end items-center gap-2">
+                    {% include "partials/theme_toggle.html" %}
+                    {% if local_mode %}
+{% include "partials/local_badge.html" %}
+{% elif current_user %}
+                    <a href="/profile" class="user-pill">
+                        <span class="user-avatar">{{ current_user.username[0] | upper }}</span>
+                        {{ current_user.username }}
+                    </a>
+                    {% else %}
+                    <a href="/login" class="btn-login">
+                        <i class="ph ph-sign-in opacity-70"></i>Sign in
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Tier 1: Mobile — nav buttons only -->
+            <div class="flex md:hidden items-center gap-2 flex-wrap justify-center">
+                <button class="nav-category active" id="cat-calculator-m" onclick="switchCategory('calculator')">
+                    <span class="cat-icon"><i class="ph ph-calculator"></i></span>
+                    Calculator
+                </button>
+                <button class="nav-category" id="cat-tools-m" onclick="switchToConverter()">
+                    <span class="cat-icon"><i class="ph ph-wrench"></i></span>
+                    Tools
+                </button>
+                <a href="/api-reference" class="nav-category">
+                    <span class="cat-icon"><i class="ph ph-plug"></i></span>
+                    API
+                </a>
+                <a href="/documentation" class="nav-category">
+                    <span class="cat-icon"><i class="ph ph-book-open"></i></span>
+                    Docs
+                </a>
+            </div>
+
+            <!-- Tier 2: Sub-nav for Calculator -->
+            <div id="subnav-calculator" class="subnav-wrapper flex items-center justify-center gap-2 pt-3 flex-wrap">
+                <button class="version-tab" onclick="switchVersion('v2')" id="tab-v2">
+                    v2.0 <span class="opacity-40 text-[10px]">2007</span>
+                </button>
+                <button class="version-tab" onclick="switchVersion('v3')" id="tab-v3">
+                    v3.0 <span class="opacity-40 text-[10px]">2015</span>
+                </button>
+                <button class="version-tab active" onclick="switchVersion('v31')" id="tab-v31">
+                    v3.1 <span class="opacity-40 text-[10px]">2019</span>
+                </button>
+                <button class="version-tab" onclick="switchVersion('v4')" id="tab-v4">
+                    v4.0 <span class="opacity-40 text-[10px]">2023</span>
+                    <span class="badge-new ml-1">NEW</span>
+                </button>
+            </div>
+
+            <!-- Tier 2: Sub-nav for Tools -->
+            <div id="subnav-tools" class="subnav-wrapper hidden flex items-center justify-center gap-2 pt-3 flex-wrap">
+                <button class="version-tab" onclick="switchToConverter()" id="tab-converter">
+                    <i class="ph ph-arrows-left-right mr-1.5 opacity-70"></i>Converter
+                </button>
+                <a href="/ai-scorer" class="version-tab">
+                    <i class="ph ph-robot mr-1.5 opacity-70"></i>AI Scorer
+                </a>
+                <a href="/cve-search" class="version-tab">
+                    <i class="ph ph-magnifying-glass mr-1.5 opacity-70"></i>CVE Search
+                </a>
+            </div>
+            <!-- Mobile user zone — below sub-navs -->
+            <div class="flex md:hidden justify-center items-center gap-2 pt-3">
+                {% include "partials/theme_toggle.html" %}
+                {% if local_mode %}
+{% include "partials/local_badge.html" %}
+{% elif current_user %}
+                <a href="/profile" class="user-pill">
+                    <span class="user-avatar">{{ current_user.username[0] | upper }}</span>
+                    {{ current_user.username }}
+                </a>
+                {% else %}
+                <a href="/login" class="btn-login">
+                    <i class="ph ph-sign-in opacity-70"></i>Sign in
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <!-- Calculator Section -->
+        <div id="calculator-section">
+            <div class="flex justify-end mb-3">
+                <label class="explain-toggle" title="Plain-language help under every metric">
+                    <i class="ph ph-lightbulb"></i>
+                    <span>Show explanations</span>
+                    <input type="checkbox" id="explain-toggle" class="sr-only peer" checked onchange="setExplanations(this.checked)">
+                    <span class="explain-switch" aria-hidden="true"></span>
+                </label>
+            </div>
+            <!-- CVSS v2.0 -->
+            <div id="calc-v2" class="calc-section hidden">
+                <div class="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Base Metrics -->
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-amber-500 to-amber-400">
+                                    <i class="ph ph-shield"></i>
+                                </div>
+                                <h3 class="h-section">Base Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Required</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v2("AV", "Access Vector (AV)", descriptions.v2.base.AV) }}
+                                {{ render_metric_v2("AC", "Access Complexity (AC)", descriptions.v2.base.AC) }}
+                                {{ render_metric_v2("Au", "Authentication (Au)", descriptions.v2.base.Au) }}
+                                {{ render_metric_v2("C", "Confidentiality Impact (C)", descriptions.v2.base.C) }}
+                                {{ render_metric_v2("I", "Integrity Impact (I)", descriptions.v2.base.I) }}
+                                {{ render_metric_v2("A", "Availability Impact (A)", descriptions.v2.base.A) }}
+                            </div>
+                        </div>
+                        
+                        <!-- Temporal Metrics -->
+                        <div class="glass-card p-6 temporal-section">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-purple-500 to-pink-500">
+                                    <i class="ph ph-clock"></i>
+                                </div>
+                                <h3 class="text-base font-bold text-white">Temporal Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{ render_metric_v2("E", "Exploitability", descriptions.v2.temporal.E, true) }}
+                                {{ render_metric_v2("RL", "Remediation Level", descriptions.v2.temporal.RL, true) }}
+                                {{ render_metric_v2("RC", "Report Confidence", descriptions.v2.temporal.RC, true) }}
+                            </div>
+                        </div>
+                        
+                        <!-- Environmental Metrics -->
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-green-500 to-emerald-500">
+                                    <i class="ph ph-hard-drives"></i>
+                                </div>
+                                <h3 class="h-section">Environmental Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v2("CDP", "Collateral Damage Potential", descriptions.v2.environmental.CDP, true) }}
+                                {{ render_metric_v2("TD", "Target Distribution", descriptions.v2.environmental.TD, true) }}
+                                {{ render_metric_v2("CR", "Confidentiality Requirement", descriptions.v2.environmental.CR, true) }}
+                                {{ render_metric_v2("IR", "Integrity Requirement", descriptions.v2.environmental.IR, true) }}
+                                {{ render_metric_v2("AR", "Availability Requirement", descriptions.v2.environmental.AR, true) }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Score Panel v2 -->
+                    <div class="lg:col-span-1 mb-6 lg:mb-0">
+                        <div class="lg:sticky lg:top-6">
+                            <div id="v2-score-display" class="glass-card p-6" hx-post="/api/cvss2/render" hx-trigger="load" hx-include="[name^='v2_']">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Impact</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                    <div class="text-center flex-1 px-2">
+                                        <div class="text-5xl font-black text-zinc-600">--</div>
+                                    </div>
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Exploitability</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-4">
+                                    <span class="inline-block px-6 py-2 rounded-full font-semibold bg-zinc-700 text-zinc-400">--</span>
+                                </div>
+                                <div class="flex items-center justify-center gap-2 text-sm text-zinc-400 mb-4">
+                                    <i class="ph ph-lightning text-amber-500"></i>
+                                    <span>Auto-calculation enabled</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CVSS v3.0 -->
+            <div id="calc-v3" class="calc-section hidden">
+                <div class="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-amber-500 to-amber-400">
+                                    <i class="ph ph-shield"></i>
+                                </div>
+                                <h3 class="h-section">Base Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Required</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v3("AV", "Attack Vector (AV)", descriptions.v3.base.AV) }}
+                                {{ render_metric_v3("AC", "Attack Complexity (AC)", descriptions.v3.base.AC) }}
+                                {{ render_metric_v3("PR", "Privileges Required (PR)", descriptions.v3.base.PR) }}
+                                {{ render_metric_v3("UI", "User Interaction (UI)", descriptions.v3.base.UI) }}
+                                {{ render_metric_v3("S", "Scope (S)", descriptions.v3.base.S) }}
+                                {{ render_metric_v3("C", "Confidentiality Impact (C)", descriptions.v3.base.C) }}
+                                {{ render_metric_v3("I", "Integrity Impact (I)", descriptions.v3.base.I) }}
+                                {{ render_metric_v3("A", "Availability Impact (A)", descriptions.v3.base.A) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-purple-500 to-pink-500">
+                                    <i class="ph ph-clock"></i>
+                                </div>
+                                <h3 class="h-section">Temporal Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{ render_metric_v3("E", "Exploit Code Maturity", descriptions.v3.temporal.E, true) }}
+                                {{ render_metric_v3("RL", "Remediation Level", descriptions.v3.temporal.RL, true) }}
+                                {{ render_metric_v3("RC", "Report Confidence", descriptions.v3.temporal.RC, true) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-green-500 to-emerald-500">
+                                    <i class="ph ph-hard-drives"></i>
+                                </div>
+                                <h3 class="h-section">Environmental Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v3("CR", "Confidentiality Requirement", descriptions.v3.environmental.CR, true) }}
+                                {{ render_metric_v3("IR", "Integrity Requirement", descriptions.v3.environmental.IR, true) }}
+                                {{ render_metric_v3("AR", "Availability Requirement", descriptions.v3.environmental.AR, true) }}
+                                {{ render_metric_v3("MAV", "Modified Attack Vector", descriptions.v3.base.AV, true) }}
+                                {{ render_metric_v3("MAC", "Modified Attack Complexity", descriptions.v3.base.AC, true) }}
+                                {{ render_metric_v3("MPR", "Modified Privileges Required", descriptions.v3.base.PR, true) }}
+                                {{ render_metric_v3("MUI", "Modified User Interaction", descriptions.v3.base.UI, true) }}
+                                {{ render_metric_v3("MS", "Modified Scope", descriptions.v3.base.S, true) }}
+                                {{ render_metric_v3("MC", "Modified Confidentiality", descriptions.v3.base.C, true) }}
+                                {{ render_metric_v3("MI", "Modified Integrity", descriptions.v3.base.I, true) }}
+                                {{ render_metric_v3("MA", "Modified Availability", descriptions.v3.base.A, true) }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Score Panel v3 -->
+                    <div class="lg:col-span-1 mb-6 lg:mb-0">
+                        <div class="lg:sticky lg:top-6">
+                            <div id="v3-score-display" class="glass-card p-6" hx-post="/api/cvss3/render" hx-trigger="load" hx-include="[name^='v3_']">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Impact</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                    <div class="text-center flex-1 px-2">
+                                        <div class="text-5xl font-black text-zinc-600">--</div>
+                                    </div>
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Exploitability</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-4">
+                                    <span class="inline-block px-6 py-2 rounded-full font-semibold bg-zinc-700 text-zinc-400">--</span>
+                                </div>
+                                <div class="flex items-center justify-center gap-2 text-sm text-zinc-400 mb-4">
+                                    <i class="ph ph-lightning text-amber-500"></i>
+                                    <span>Auto-calculation enabled</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CVSS v3.1 -->
+            <div id="calc-v31" class="calc-section">
+                <div class="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-amber-500 to-amber-400">
+                                    <i class="ph ph-shield"></i>
+                                </div>
+                                <h3 class="h-section">Base Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Required</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v31("AV", "Attack Vector (AV)", descriptions.v3.base.AV) }}
+                                {{ render_metric_v31("AC", "Attack Complexity (AC)", descriptions.v3.base.AC) }}
+                                {{ render_metric_v31("PR", "Privileges Required (PR)", descriptions.v3.base.PR) }}
+                                {{ render_metric_v31("UI", "User Interaction (UI)", descriptions.v3.base.UI) }}
+                                {{ render_metric_v31("S", "Scope (S)", descriptions.v3.base.S) }}
+                                {{ render_metric_v31("C", "Confidentiality Impact (C)", descriptions.v3.base.C) }}
+                                {{ render_metric_v31("I", "Integrity Impact (I)", descriptions.v3.base.I) }}
+                                {{ render_metric_v31("A", "Availability Impact (A)", descriptions.v3.base.A) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-purple-500 to-pink-500">
+                                    <i class="ph ph-clock"></i>
+                                </div>
+                                <h3 class="h-section">Temporal Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{ render_metric_v31("E", "Exploit Code Maturity", descriptions.v3.temporal.E, true) }}
+                                {{ render_metric_v31("RL", "Remediation Level", descriptions.v3.temporal.RL, true) }}
+                                {{ render_metric_v31("RC", "Report Confidence", descriptions.v3.temporal.RC, true) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-green-500 to-emerald-500">
+                                    <i class="ph ph-hard-drives"></i>
+                                </div>
+                                <h3 class="h-section">Environmental Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v31("CR", "Confidentiality Requirement", descriptions.v3.environmental.CR, true) }}
+                                {{ render_metric_v31("IR", "Integrity Requirement", descriptions.v3.environmental.IR, true) }}
+                                {{ render_metric_v31("AR", "Availability Requirement", descriptions.v3.environmental.AR, true) }}
+                                {{ render_metric_v31("MAV", "Modified Attack Vector", descriptions.v3.base.AV, true) }}
+                                {{ render_metric_v31("MAC", "Modified Attack Complexity", descriptions.v3.base.AC, true) }}
+                                {{ render_metric_v31("MPR", "Modified Privileges Required", descriptions.v3.base.PR, true) }}
+                                {{ render_metric_v31("MUI", "Modified User Interaction", descriptions.v3.base.UI, true) }}
+                                {{ render_metric_v31("MS", "Modified Scope", descriptions.v3.base.S, true) }}
+                                {{ render_metric_v31("MC", "Modified Confidentiality", descriptions.v3.base.C, true) }}
+                                {{ render_metric_v31("MI", "Modified Integrity", descriptions.v3.base.I, true) }}
+                                {{ render_metric_v31("MA", "Modified Availability", descriptions.v3.base.A, true) }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Score Panel v31 -->
+                    <div class="lg:col-span-1 mb-6 lg:mb-0">
+                        <div class="lg:sticky lg:top-6">
+                            <div id="v31-score-display" class="glass-card p-6" hx-post="/api/cvss31/render" hx-trigger="load" hx-include="[name^='v31_']">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Impact</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                    <div class="text-center flex-1 px-2">
+                                        <div class="text-5xl font-black text-zinc-600">--</div>
+                                    </div>
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Exploitability</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-4">
+                                    <span class="inline-block px-6 py-2 rounded-full font-semibold bg-zinc-700 text-zinc-400">--</span>
+                                </div>
+                                <div class="flex items-center justify-center gap-2 text-sm text-zinc-400 mb-4">
+                                    <i class="ph ph-lightning text-amber-500"></i>
+                                    <span>Auto-calculation enabled</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CVSS v4.0 -->
+            <div id="calc-v4" class="calc-section hidden">
+                <div class="flex flex-col-reverse lg:grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass-card p-6">
+                            <div class="flex items-center gap-3 mb-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                                <i class="ph ph-info text-amber-500 text-xl"></i>
+                                <div>
+                                    <h4 class="font-bold text-amber-500">CVSS v4.0 — What's New!</h4>
+                                    <p class="text-sm text-amber-400/70">New model with supplemental metrics and focus on Subsequent Systems</p>
+                                </div>
+                            </div>
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-amber-500 to-amber-400">
+                                    <i class="ph ph-shield"></i>
+                                </div>
+                                <h3 class="h-section">Base Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Required</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v4("AV", "Attack Vector (AV)", descriptions.v4.base.AV) }}
+                                {{ render_metric_v4("AC", "Attack Complexity (AC)", descriptions.v4.base.AC) }}
+                                {{ render_metric_v4("AT", "Attack Requirements (AT)", descriptions.v4.base.AT) }}
+                                {{ render_metric_v4("PR", "Privileges Required (PR)", descriptions.v4.base.PR) }}
+                                {{ render_metric_v4("UI", "User Interaction (UI)", descriptions.v4.base.UI) }}
+                                {{ render_metric_v4("VC", "Confidentiality (Vulnerable)", descriptions.v4.base.VC) }}
+                                {{ render_metric_v4("VI", "Integrity (Vulnerable)", descriptions.v4.base.VI) }}
+                                {{ render_metric_v4("VA", "Availability (Vulnerable)", descriptions.v4.base.VA) }}
+                                {{ render_metric_v4("SC", "Confidentiality (Subsequent)", descriptions.v4.base.SC) }}
+                                {{ render_metric_v4("SI", "Integrity (Subsequent)", descriptions.v4.base.SI) }}
+                                {{ render_metric_v4("SA", "Availability (Subsequent)", descriptions.v4.base.SA) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-purple-500 to-pink-500">
+                                    <i class="ph ph-clock"></i>
+                                </div>
+                                <h3 class="h-section">Threat Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{ render_metric_v4("E", "Exploit Maturity", descriptions.v4.threat.E, true) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-green-500 to-emerald-500">
+                                    <i class="ph ph-hard-drives"></i>
+                                </div>
+                                <h3 class="h-section">Environmental Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v4("CR", "Confidentiality Requirement", descriptions.v4.environmental.CR, true) }}
+                                {{ render_metric_v4("IR", "Integrity Requirement", descriptions.v4.environmental.IR, true) }}
+                                {{ render_metric_v4("AR", "Availability Requirement", descriptions.v4.environmental.AR, true) }}
+                                {{ render_metric_v4("MAV", "Modified Attack Vector", descriptions.v4.base.AV, true) }}
+                                {{ render_metric_v4("MAC", "Modified Attack Complexity", descriptions.v4.base.AC, true) }}
+                                {{ render_metric_v4("MAT", "Modified Attack Requirements", descriptions.v4.base.AT, true) }}
+                                {{ render_metric_v4("MPR", "Modified Privileges Required", descriptions.v4.base.PR, true) }}
+                                {{ render_metric_v4("MUI", "Modified User Interaction", descriptions.v4.base.UI, true) }}
+                                {{ render_metric_v4("MVC", "Modified Confidentiality", descriptions.v4.base.VC, true) }}
+                                {{ render_metric_v4("MVI", "Modified Integrity", descriptions.v4.base.VI, true) }}
+                                {{ render_metric_v4("MVA", "Modified Availability", descriptions.v4.base.VA, true) }}
+                                {{ render_metric_v4("MSC", "Modified Confidentiality (Subsequent)", descriptions.v4.environmental.MSC, true) }}
+                                {{ render_metric_v4("MSI", "Modified Integrity (Subsequent)", descriptions.v4.environmental.MSI, true) }}
+                                {{ render_metric_v4("MSA", "Modified Availability (Subsequent)", descriptions.v4.environmental.MSA, true) }}
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6">
+                            <div class="section-header">
+                                <div class="section-icon bg-gradient-to-br from-amber-500 to-amber-400">
+                                    <i class="ph ph-plus-circle"></i>
+                                </div>
+                                <h3 class="h-section">Supplemental Metrics</h3>
+                                <span class="ml-auto text-xs text-zinc-400 bg-zinc-700/50 px-3 py-1 rounded-full">Optional</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {{ render_metric_v4("S", "Safety", descriptions.v4.supplemental.S, true) }}
+                                {{ render_metric_v4("AU", "Automatable", descriptions.v4.supplemental.AU, true) }}
+                                {{ render_metric_v4("R", "Recovery", descriptions.v4.supplemental.R, true) }}
+                                {{ render_metric_v4("V", "Value Density", descriptions.v4.supplemental.V, true) }}
+                                {{ render_metric_v4("RE", "Response Effort", descriptions.v4.supplemental.RE, true) }}
+                                {{ render_metric_v4("U", "Provider Urgency", descriptions.v4.supplemental.U, true) }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Score Panel v4 -->
+                    <div class="lg:col-span-1 mb-6 lg:mb-0">
+                        <div class="lg:sticky lg:top-6">
+                            <div id="v4-score-display" class="glass-card p-6" hx-post="/api/cvss4/render" hx-trigger="load" hx-include="[name^='v4_']">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Impact</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                    <div class="text-center flex-1 px-2">
+                                        <div class="text-5xl font-black text-zinc-600">--</div>
+                                    </div>
+                                    <div class="text-center flex-1">
+                                        <div class="text-xs text-zinc-400 mb-1">Exploitability</div>
+                                        <div class="text-lg font-semibold text-white">--</div>
+                                    </div>
+                                </div>
+                                <div class="text-center mb-4">
+                                    <span class="inline-block px-6 py-2 rounded-full font-semibold bg-zinc-700 text-zinc-400">--</span>
+                                </div>
+                                <div class="flex items-center justify-center gap-2 text-sm text-zinc-400 mb-4">
+                                    <i class="ph ph-lightning text-amber-500"></i>
+                                    <span>Auto-calculation enabled</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Converter Section -->
+        <div id="converter-section" class="hidden">
+            <div class="glass-card p-8 max-w-4xl mx-auto">
+                <h2 class="h-page mb-8 text-center">
+                    <i class="ph ph-arrows-left-right text-amber-500 mr-3"></i>CVSS Converter
+                </h2>
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm text-zinc-400 mb-2">From Version</label>
+                        <select id="conv-from" class="w-full bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-amber-500 focus:outline-none">
+                            <option value="2.0">CVSS v2.0</option>
+                            <option value="3.0">CVSS v3.0</option>
+                            <option value="3.1">CVSS v3.1</option>
+                            <option value="4.0">CVSS v4.0</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-zinc-400 mb-2">To Version</label>
+                        <select id="conv-to" class="w-full bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-amber-500 focus:outline-none">
+                            <option value="3.0">CVSS v3.0</option>
+                            <option value="3.1">CVSS v3.1</option>
+                            <option value="4.0">CVSS v4.0</option>
+                            <option value="2.0">CVSS v2.0</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm text-zinc-400 mb-2">Vector String</label>
+                    <input type="text" id="conv-vector" placeholder="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+                        class="w-full bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:border-amber-500 focus:outline-none font-mono"
+                        oninput="autoDetectVersion(this.value)">
+                    <div id="version-detected" class="mt-2 text-xs text-amber-500 hidden">
+                        <i class="ph ph-check-circle mr-1"></i>Version detected: <span id="detected-version-text"></span>
+                    </div>
+                </div>
+                
+                <!-- Quick Examples -->
+                <div class="mb-6 p-4 bg-zinc-800/30 rounded-xl border border-zinc-700/50">
+                    <h4 class="text-sm font-semibold text-zinc-300 mb-3">
+                        <i class="ph ph-lightbulb text-yellow-500 mr-2"></i>Quick Examples
+                    </h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="loadExample('2.0', 'AV:N/AC:L/Au:N/C:C/I:C/A:C')" class="px-3 py-1.5 bg-zinc-700/50 border border-zinc-600 rounded-lg text-xs hover:border-amber-500 transition">
+                            v2.0 Critical Remote
+                        </button>
+                        <button onclick="loadExample('3.1', 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H')" class="px-3 py-1.5 bg-zinc-700/50 border border-zinc-600 rounded-lg text-xs hover:border-amber-500 transition">
+                            v3.1 Critical Network
+                        </button>
+                        <button onclick="loadExample('4.0', 'CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N')" class="px-3 py-1.5 bg-zinc-700/50 border border-zinc-600 rounded-lg text-xs hover:border-amber-500 transition">
+                            v4.0 Critical Exploit
+                        </button>
+                        <button onclick="loadExample('2.0', 'AV:L/AC:H/Au:M/C:P/I:N/A:N')" class="px-3 py-1.5 bg-zinc-700/50 border border-zinc-600 rounded-lg text-xs hover:border-amber-500 transition">
+                            v2.0 Local Low
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mb-6">
+                    <button onclick="convertCVSS()" class="flex-1 py-4 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl font-semibold hover:from-amber-700 hover:to-amber-800 transition shadow-lg">
+                        <i class="ph ph-arrows-left-right mr-2"></i>Convert
+                    </button>
+                    <button onclick="resetConverter()" class="px-6 py-4 bg-zinc-700 text-zinc-300 rounded-xl font-semibold hover:bg-zinc-600 transition border border-zinc-600">
+                        <i class="ph ph-arrow-counter-clockwise mr-2"></i>Reset
+                    </button>
+                </div>
+                <div id="conv-result" class="hidden"></div>
+            </div>
+        </div>
+        
+        <!-- Guide Section -->
+        <div id="guide" class="mt-12">
+            <h2 class="h-page mb-8 text-center">
+                <span>CVSS Severity Levels</span>
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {{ render_severity_card("None", "0.0", "#64748b", "No vulnerability") }}
+                {{ render_severity_card("Low", "0.1 - 3.9", "#22c55e", "Low risk, difficult to exploit") }}
+                {{ render_severity_card("Medium", "4.0 - 6.9", "#eab308", "Moderate risk") }}
+                {{ render_severity_card("High", "7.0 - 8.9", "#f97316", "High risk, easy to exploit") }}
+                {{ render_severity_card("Critical", "9.0 - 10.0", "#ef4444", "Critical risk, immediate action") }}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include "partials/footer.html" %}
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glass-card max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6 border-b border-zinc-700/50 flex items-center justify-between">
+                <h3 id="help-title" class="text-xl font-bold text-white"></h3>
+                <button onclick="closeHelp()" class="text-zinc-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-700 transition">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            <div id="help-content" class="p-6 text-zinc-300"></div>
+        </div>
+    </div>
+
+    <script>
+        // Current active version - default to v3.1
+        let currentVersion = 'v31';
+        let currentValues = { v2: {}, v3: {}, v31: {}, v4: {} };
+
+        const versionMappings = {
+            v2_to_v3: {
+                'AV': { 'L': 'L', 'A': 'A', 'N': 'N' },
+                'AC': { 'H': 'H', 'M': 'L', 'L': 'L' },
+                'Au': { 'N': 'N', 'S': 'L', 'M': 'L' },
+                'C': { 'N': 'N', 'P': 'L', 'C': 'H' },
+                'I': { 'N': 'N', 'P': 'L', 'C': 'H' },
+                'A': { 'N': 'N', 'P': 'L', 'C': 'H' }
+            },
+            v3_to_v4: {
+                'AV': { 'N': 'N', 'A': 'A', 'L': 'L', 'P': 'P' },
+                'AC': { 'L': 'L', 'H': 'H' },
+                'PR': { 'N': 'N', 'L': 'L', 'H': 'H' },
+                'UI': { 'N': 'N', 'R': 'A' },
+                'C': { 'N': 'N', 'L': 'L', 'H': 'H' },
+                'I': { 'N': 'N', 'L': 'L', 'H': 'H' },
+                'A': { 'N': 'N', 'L': 'L', 'H': 'H' }
+            },
+            v4_to_v3: {
+                'AV': { 'N': 'N', 'A': 'A', 'L': 'L', 'P': 'P' },
+                'AC': { 'L': 'L', 'H': 'H' },
+                'PR': { 'N': 'N', 'L': 'L', 'H': 'H' },
+                'UI': { 'N': 'N', 'P': 'R', 'A': 'R' },
+                'VC': { 'N': 'N', 'L': 'L', 'H': 'H' },
+                'VI': { 'N': 'N', 'L': 'L', 'H': 'H' },
+                'VA': { 'N': 'N', 'L': 'L', 'H': 'H' }
+            },
+            v3_to_v2: {
+                'AV': { 'N': 'N', 'A': 'A', 'L': 'L', 'P': 'L' },
+                'AC': { 'L': 'L', 'H': 'H' },
+                'PR': { 'N': 'N', 'L': 'S', 'H': 'M' },
+                'C': { 'N': 'N', 'L': 'P', 'H': 'C' },
+                'I': { 'N': 'N', 'L': 'P', 'H': 'C' },
+                'A': { 'N': 'N', 'L': 'P', 'H': 'C' }
+            }
+        };
+
+        // URL Sharing functions
+        function updateURLWithVector(version, vector) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('v', version);
+            url.searchParams.set('vector', vector);
+            window.history.replaceState({}, '', url);
+        }
+        
+        function getVectorFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Support both old 'v' parameter (converter) and new 'calc' parameter (calculator)
+            const calcVersion = urlParams.get('calc');
+            const convVersion = urlParams.get('v');
+            return {
+                version: calcVersion || convVersion,
+                vector: urlParams.get('vector'),
+                mode: calcVersion ? 'calculator' : (convVersion ? 'converter' : null)
+            };
+        }
+
+        function parseVectorString(vector) {
+            const metrics = {};
+            if (!vector) return metrics;
+            
+            // Remove prefix
+            let cleanVector = vector;
+            if (vector.startsWith('CVSS:4.0/')) cleanVector = vector.substring(9);
+            else if (vector.startsWith('CVSS:3.1/')) cleanVector = vector.substring(9);
+            else if (vector.startsWith('CVSS:3.0/')) cleanVector = vector.substring(9);
+            else if (vector.startsWith('(') && vector.endsWith(')')) cleanVector = vector.slice(1, -1);
+            
+            // Parse metrics
+            const pairs = cleanVector.split('/');
+            pairs.forEach(pair => {
+                if (pair.includes(':')) {
+                    const [key, value] = pair.split(':');
+                    metrics[key] = value;
+                }
+            });
+            return metrics;
+        }
+
+        function applyVectorToCalculator(version, vector) {
+            const metrics = parseVectorString(vector);
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            
+            Object.entries(metrics).forEach(([metric, value]) => {
+                const radio = document.querySelector(`input[name="${prefix}${metric}"][value="${value}"]`);
+                if (radio) {
+                    radio.checked = true;
+                }
+            });
+            
+            // Update visual state
+            updateVisualState(version);
+            // Trigger recalculation
+            triggerRecalculation(version);
+        }
+        
+        function copyShareableLink(version) {
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            const metrics = {};
+            document.querySelectorAll(`input[name^="${prefix}"]:checked`).forEach(input => {
+                const metric = input.name.replace(prefix, '');
+                metrics[metric] = input.value;
+            });
+            
+            let vector = '';
+            if (version === 'v2') {
+                const baseMetrics = ['AV', 'AC', 'Au', 'C', 'I', 'A'].filter(k => metrics[k]).map(k => `${k}:${metrics[k]}`);
+                const tempMetrics = ['E', 'RL', 'RC'].filter(k => metrics[k] && metrics[k] !== 'ND').map(k => `${k}:${metrics[k]}`);
+                const envMetrics = ['CDP', 'TD', 'CR', 'IR', 'AR'].filter(k => metrics[k] && metrics[k] !== 'ND').map(k => `${k}:${metrics[k]}`);
+                vector = '(' + [...baseMetrics, ...tempMetrics, ...envMetrics].join('/') + ')';
+            } else if (version === 'v3') {
+                const baseMetrics = ['AV', 'AC', 'PR', 'UI', 'S', 'C', 'I', 'A'].filter(k => metrics[k]).map(k => `${k}:${metrics[k]}`);
+                const tempMetrics = ['E', 'RL', 'RC'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                const envMetrics = ['CR', 'IR', 'AR', 'MAV', 'MAC', 'MPR', 'MUI', 'MS', 'MC', 'MI', 'MA'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                vector = 'CVSS:3.0/' + [...baseMetrics, ...tempMetrics, ...envMetrics].join('/');
+            } else if (version === 'v31') {
+                const baseMetrics = ['AV', 'AC', 'PR', 'UI', 'S', 'C', 'I', 'A'].filter(k => metrics[k]).map(k => `${k}:${metrics[k]}`);
+                const tempMetrics = ['E', 'RL', 'RC'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                const envMetrics = ['CR', 'IR', 'AR', 'MAV', 'MAC', 'MPR', 'MUI', 'MS', 'MC', 'MI', 'MA'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                vector = 'CVSS:3.1/' + [...baseMetrics, ...tempMetrics, ...envMetrics].join('/');
+            } else if (version === 'v4') {
+                const baseMetrics = ['AV', 'AC', 'AT', 'PR', 'UI', 'VC', 'VI', 'VA', 'SC', 'SI', 'SA'].filter(k => metrics[k]).map(k => `${k}:${metrics[k]}`);
+                const threatMetrics = ['E'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                const envMetrics = ['CR', 'IR', 'AR', 'MAV', 'MAC', 'MAT', 'MPR', 'MUI', 'MVC', 'MVI', 'MVA', 'MSC', 'MSI', 'MSA'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                const suppMetrics = ['S', 'AU', 'R', 'V', 'RE', 'U'].filter(k => metrics[k] && metrics[k] !== 'X').map(k => `${k}:${metrics[k]}`);
+                vector = 'CVSS:4.0/' + [...baseMetrics, ...threatMetrics, ...envMetrics, ...suppMetrics].join('/');
+            }
+            
+            const url = new URL(window.location.href);
+            // Use 'calc' parameter to open calculator directly instead of converter
+            url.searchParams.set('calc', version);
+            url.searchParams.set('vector', vector);
+            // Remove any old 'v' parameter
+            url.searchParams.delete('v');
+            
+            navigator.clipboard.writeText(url.toString()).then(() => {
+                showNotification('Link copied to clipboard!', 'success');
+            });
+        }
+
+        function showNotification(message, type = 'success') {
+            const color = type === 'success' ? 'from-amber-600 to-amber-700' : 'from-red-500 to-orange-600';
+            const notif = document.createElement('div');
+            notif.className = `fixed bottom-4 right-4 bg-gradient-to-r ${color} text-white px-6 py-4 rounded-2xl shadow-2xl z-50 animate-fade-in font-medium`;
+            notif.innerHTML = `<i class="ph ph-${type === 'success' ? 'check' : 'warning-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.style.opacity = '0';
+                notif.style.transition = 'opacity 0.5s';
+                setTimeout(() => notif.remove(), 500);
+            }, 3000);
+        }
+
+        function extractValues(version) {
+            const values = {};
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            document.querySelectorAll(`input[name^="${prefix}"]:checked`).forEach(input => {
+                const metric = input.name.replace(prefix, '');
+                values[metric] = input.value;
+            });
+            return values;
+        }
+
+        function applyValues(version, values) {
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            for (const [metric, value] of Object.entries(values)) {
+                const radios = document.querySelectorAll(`input[name="${prefix}${metric}"]`);
+                radios.forEach(radio => {
+                    if (radio.value === value) radio.checked = true;
+                });
+            }
+            // Update visual state
+            updateVisualState(version);
+        }
+
+        function updateVisualState(version) {
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            document.querySelectorAll(`#calc-${version} .metric-option`).forEach(option => {
+                const radio = option.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+            refreshExplanations(version);
+        }
+
+        function convertValues(values, fromVer, toVer) {
+            const converted = {};
+            let mapping = null;
+            
+            if (fromVer === toVer) return values;
+            else if ((fromVer === 'v3' && toVer === 'v31') || (fromVer === 'v31' && toVer === 'v3')) return values;
+            else if (fromVer === 'v2' && (toVer === 'v3' || toVer === 'v31')) mapping = versionMappings.v2_to_v3;
+            else if ((fromVer === 'v3' || fromVer === 'v31') && toVer === 'v4') mapping = versionMappings.v3_to_v4;
+            else if (fromVer === 'v4' && (toVer === 'v3' || toVer === 'v31')) mapping = versionMappings.v4_to_v3;
+            else if ((fromVer === 'v3' || fromVer === 'v31') && toVer === 'v2') mapping = versionMappings.v3_to_v2;
+            
+            if (!mapping) return values;
+            
+            for (const [metric, value] of Object.entries(values)) {
+                if (mapping[metric] && mapping[metric][value]) {
+                    converted[metric] = mapping[metric][value];
+                } else {
+                    converted[metric] = value;
+                }
+            }
+            
+            if ((fromVer === 'v3' || fromVer === 'v31') && toVer === 'v4') {
+                if (values['C']) converted['VC'] = mapping['C']?.[values['C']] || values['C'];
+                if (values['I']) converted['VI'] = mapping['I']?.[values['I']] || values['I'];
+                if (values['A']) converted['VA'] = mapping['A']?.[values['A']] || values['A'];
+                converted['SC'] = 'S';
+                converted['SI'] = 'S';
+                converted['SA'] = 'S';
+                converted['AT'] = 'N';
+            } else if (fromVer === 'v4' && (toVer === 'v3' || toVer === 'v31')) {
+                if (values['VC']) converted['C'] = mapping['VC']?.[values['VC']] || values['VC'];
+                if (values['VI']) converted['I'] = mapping['VI']?.[values['VI']] || values['VI'];
+                if (values['VA']) converted['A'] = mapping['VA']?.[values['VA']] || values['VA'];
+                converted['S'] = (values['SC'] === 'H' || values['SI'] === 'H' || values['SA'] === 'H') ? 'C' : 'U';
+                if (!converted['AV']) converted['AV'] = values['AV'] || 'N';
+                if (!converted['AC']) converted['AC'] = values['AC'] || 'L';
+                if (!converted['PR']) converted['PR'] = values['PR'] || 'N';
+                if (!converted['UI']) converted['UI'] = values['UI'] || 'N';
+            } else if (fromVer === 'v2' && (toVer === 'v3' || toVer === 'v31')) {
+                if (values['Au']) converted['PR'] = mapping['Au']?.[values['Au']] || 'N';
+                converted['UI'] = 'N';
+                converted['S'] = 'U';
+            } else if ((fromVer === 'v3' || fromVer === 'v31') && toVer === 'v2') {
+                if (values['PR']) converted['Au'] = mapping['PR']?.[values['PR']] || 'N';
+            }
+            
+            return converted;
+        }
+
+        function switchCategory(cat) {
+            // Update tier-1 buttons
+            document.querySelectorAll('.nav-category').forEach(b => b.classList.remove('active'));
+            document.getElementById('cat-' + cat).classList.add('active');
+
+            // Section accent color follows the active category
+            document.documentElement.setAttribute('data-section', cat);
+
+            // Show/hide tier-2 subnavs
+            document.getElementById('subnav-calculator').classList.toggle('hidden', cat !== 'calculator');
+            document.getElementById('subnav-tools').classList.toggle('hidden', cat !== 'tools');
+        }
+
+        function switchVersion(version) {
+            if (currentVersion !== 'converter') {
+                currentValues[currentVersion] = extractValues(currentVersion);
+            }
+
+            const previousVersion = currentVersion;
+            currentVersion = version;
+
+            // Ensure Calculator category is active (tier 1)
+            switchCategory('calculator');
+
+            // Update version tabs (tier 2)
+            document.querySelectorAll('#subnav-calculator .version-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + version).classList.add('active');
+
+            // Update sub-tabs
+            document.querySelectorAll('.sub-tab').forEach(tab => tab.classList.remove('active'));
+            if (document.getElementById('subtab-' + version)) {
+                document.getElementById('subtab-' + version).classList.add('active');
+            }
+
+            // Show/hide sections
+            document.querySelectorAll('.calc-section').forEach(section => section.classList.add('hidden'));
+            document.getElementById('calculator-section').classList.remove('hidden');
+            document.getElementById('converter-section').classList.add('hidden');
+            document.getElementById('calc-' + version).classList.remove('hidden');
+            
+            // Convert values if switching between calculator versions
+            if (version !== 'converter' && previousVersion !== 'converter' && previousVersion !== version) {
+                const sourceValues = currentValues[previousVersion] || extractValues(previousVersion);
+                if (Object.keys(sourceValues).length > 0) {
+                    const convertedValues = convertValues(sourceValues, previousVersion, version);
+                    applyValues(version, convertedValues);
+                    setTimeout(() => {
+                        triggerRecalculation(version);
+                        const formatVersion = (v) => v === 'v31' ? 'v3.1' : v === 'v2' ? 'v2.0' : v === 'v3' ? 'v3.0' : v === 'v4' ? 'v4.0' : v;
+                        showNotification(`Values converted from ${formatVersion(previousVersion)} to ${formatVersion(version)}`);
+                    }, 100);
+                }
+            } else if (version !== 'converter') {
+                setTimeout(() => triggerRecalculation(version), 100);
+            }
+        }
+
+        function switchToCalculator() {
+            document.getElementById('calculator-section').classList.remove('hidden');
+            document.getElementById('converter-section').classList.add('hidden');
+
+            // Switch to appropriate version (switchVersion handles tier-1 activation)
+            const targetVersion = (currentVersion === 'converter' || !currentVersion) ? 'v31' : currentVersion;
+            switchVersion(targetVersion);
+        }
+
+        function switchToConverter() {
+            document.getElementById('calculator-section').classList.add('hidden');
+            document.getElementById('converter-section').classList.remove('hidden');
+
+            // Ensure Tools category is active (tier 1)
+            switchCategory('tools');
+
+            // Update tier-2 tab styling
+            document.querySelectorAll('#subnav-tools .version-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-converter').classList.add('active');
+
+            currentVersion = 'converter';
+        }
+
+        function triggerRecalculation(version) {
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            // Find the first checked radio for base metrics
+            const baseMetrics = ['AV', 'AC', 'PR', 'UI', 'S', 'C', 'I', 'A'];
+            for (const metric of baseMetrics) {
+                const radio = document.querySelector(`input[name="${prefix}${metric}"]:checked`);
+                if (radio && typeof htmx !== 'undefined') {
+                    htmx.trigger(radio, 'change');
+                    return;
+                }
+            }
+            // Fallback to any checked radio
+            const firstRadio = document.querySelector(`input[name^="${prefix}"]:checked`);
+            if (firstRadio && typeof htmx !== 'undefined') {
+                htmx.trigger(firstRadio, 'change');
+            }
+        }
+
+        // Plain-language explanation of the selected value, under each metric card
+        function refreshExplanation(card) {
+            const box = card.querySelector('.metric-explain');
+            if (!box) return;
+            const checked = card.querySelector('input[type="radio"]:checked');
+            const option = checked ? checked.closest('.metric-option') : null;
+            box.textContent = option ? (option.dataset.explain || '') : '';
+        }
+
+        function refreshExplanations(version) {
+            document.querySelectorAll(`#calc-${version} .metric-card`).forEach(refreshExplanation);
+        }
+
+        function setExplanations(on) {
+            document.body.classList.toggle('explain-off', !on);
+            try { localStorage.setItem('cvss_explanations', on ? 'on' : 'off'); } catch (e) {}
+            if (typeof track === 'function') track('explanations_toggle', { state: on ? 'on' : 'off' });
+        }
+
+        function selectOption(element, name, value, version) {
+            element.parentElement.querySelectorAll('.metric-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            
+            const prefix = version === 'v31' ? 'v31_' : `v${version.replace(/[^0-9]/g, '')}_`;
+            const radio = document.querySelector(`input[name="${prefix}${name}"][value="${value}"]`);
+            if (radio) {
+                radio.checked = true;
+                if (typeof htmx !== 'undefined') {
+                    htmx.trigger(radio, 'change');
+                }
+            }
+            refreshExplanation(element.closest('.metric-card'));
+            
+            // Track metric change (GA4 via track())
+            trackMetricChange(version, name, value);
+        }
+
+        function copyVector(inputId) {
+            const input = document.getElementById(inputId);
+            input.select();
+            document.execCommand('copy');
+            showNotification('Vector copied to clipboard!');
+        }
+
+        function validateVectorString(vector, version) {
+            if (!vector || vector.trim() === '') {
+                return { valid: false, error: 'Please enter a vector string' };
+            }
+            
+            const v = vector.trim();
+            
+            if (version === '2.0') {
+                const cleanVector = v.startsWith('(') && v.endsWith(')') ? v.slice(1, -1) : v;
+                if (!cleanVector.includes('/')) {
+                    return { valid: false, error: 'Invalid v2.0 format. Expected: AV:X/AC:X/Au:X/C:X/I:X/A:X', example: 'AV:N/AC:L/Au:N/C:C/I:C/A:C' };
+                }
+            } else if (version === '3.0' || version === '3.1') {
+                const prefix = version === '3.1' ? 'CVSS:3.1/' : 'CVSS:3.0/';
+                if (!v.startsWith(prefix)) {
+                    return { valid: false, error: `Must start with "${prefix}"`, example: `${prefix}AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H` };
+                }
+            } else if (version === '4.0') {
+                if (!v.startsWith('CVSS:4.0/')) {
+                    return { valid: false, error: 'Must start with "CVSS:4.0/"', example: 'CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N' };
+                }
+            }
+            
+            return { valid: true };
+        }
+
+        function showError(message) {
+            const container = document.getElementById('conv-result');
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="bg-red-500/20 border border-red-500/50 rounded-xl p-4 text-center">
+                    <i class="ph ph-warning-circle text-red-400 text-2xl mb-2"></i>
+                    <p class="text-red-300">${message}</p>
+                </div>
+            `;
+        }
+
+        function resetConverter() {
+            document.getElementById('conv-from').value = '2.0';
+            document.getElementById('conv-to').value = '3.0';
+            document.getElementById('conv-vector').value = '';
+            document.getElementById('conv-result').classList.add('hidden');
+        }
+
+        function loadExample(version, vector) {
+            document.getElementById('conv-from').value = version;
+            document.getElementById('conv-vector').value = vector;
+            convertCVSS();
+        }
+
+        function autoDetectVersion(vector) {
+            if (!vector || vector.trim() === '') return;
+            
+            const v = vector.trim();
+            let detectedVersion = null;
+            let displayText = '';
+            
+            // Detect version based on prefix
+            if (v.startsWith('CVSS:4.0/')) {
+                detectedVersion = '4.0';
+                displayText = 'CVSS v4.0';
+            } else if (v.startsWith('CVSS:3.1/')) {
+                detectedVersion = '3.1';
+                displayText = 'CVSS v3.1';
+            } else if (v.startsWith('CVSS:3.0/')) {
+                detectedVersion = '3.0';
+                displayText = 'CVSS v3.0';
+            } else if (v.includes('/AV:') && v.includes('/AC:') && (v.includes('/Au:') || v.includes('/C:'))) {
+                // Likely v2.0 format
+                detectedVersion = '2.0';
+                displayText = 'CVSS v2.0';
+            }
+            
+            if (detectedVersion) {
+                const fromSelect = document.getElementById('conv-from');
+                // Only auto-update if different and user hasn't manually selected
+                if (fromSelect.value !== detectedVersion) {
+                    fromSelect.value = detectedVersion;
+                    // Show detection feedback
+                    const detectionDiv = document.getElementById('version-detected');
+                    const detectionText = document.getElementById('detected-version-text');
+                    detectionDiv.classList.remove('hidden');
+                    detectionText.textContent = displayText;
+                    // Auto-hide after 3 seconds
+                    setTimeout(() => {
+                        detectionDiv.classList.add('hidden');
+                    }, 3000);
+                }
+            }
+        }
+
+        function showLoading() {
+            const container = document.getElementById('conv-result');
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="flex items-center justify-center p-8">
+                    <i class="ph ph-circle-notch text-3xl text-amber-500 mr-3"></i>
+                    <span class="text-zinc-400">Converting...</span>
+                </div>
+            `;
+        }
+
+        function getScoreColor(score) {
+            if (score === 0) return '#64748b';
+            if (score < 4) return '#22c55e';
+            if (score < 7) return '#eab308';
+            if (score < 9) return '#f97316';
+            return '#ef4444';
+        }
+
+        function displayConversionResult(data, fromVer, toVer) {
+            const container = document.getElementById('conv-result');
+            container.classList.remove('hidden');
+            
+            // Build score cards with all available scores
+            function buildScoreCard(result, version) {
+                let scores = `<div class="text-3xl font-bold mb-1" style="color: ${getScoreColor(result.base_score)}">${result.base_score}</div>
+                              <div class="text-sm mb-2" style="color: ${getScoreColor(result.base_score)}">${result.base_severity} (Base)</div>`;
+                
+                if (result.temporal_score !== null && result.temporal_score !== undefined) {
+                    scores += `<div class="text-xl font-bold mb-1" style="color: ${getScoreColor(result.temporal_score)}">${result.temporal_score}</div>
+                               <div class="text-xs mb-2" style="color: ${getScoreColor(result.temporal_score)}">${result.temporal_severity} (Temporal)</div>`;
+                }
+                
+                if (result.environmental_score !== null && result.environmental_score !== undefined) {
+                    scores += `<div class="text-xl font-bold mb-1" style="color: ${getScoreColor(result.environmental_score)}">${result.environmental_score}</div>
+                               <div class="text-xs" style="color: ${getScoreColor(result.environmental_score)}">${result.environmental_severity} (Env)</div>`;
+                }
+                
+                return scores;
+            }
+            
+            container.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="glass-card p-4 text-center">
+                        <div class="text-sm text-zinc-400 mb-2">Original (${fromVer})</div>
+                        ${buildScoreCard(data.original, fromVer)}
+                        <div class="mt-3 pt-3 border-t border-zinc-700/50">
+                            <code class="text-xs font-mono text-zinc-400 break-all">${data.original.vector_string || '--'}</code>
+                        </div>
+                    </div>
+                    <div class="glass-card p-4 text-center border-amber-500/30">
+                        <div class="text-sm text-zinc-400 mb-2">Converted (${toVer})</div>
+                        ${buildScoreCard(data.converted, toVer)}
+                        <div class="mt-3 pt-3 border-t border-zinc-700/50">
+                            <code class="text-xs font-mono text-zinc-400 break-all">${data.converted.vector_string || '--'}</code>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function convertCVSS() {
+            const fromVer = document.getElementById('conv-from').value;
+            const toVer = document.getElementById('conv-to').value;
+            const vector = document.getElementById('conv-vector').value.trim();
+            
+            const validation = validateVectorString(vector, fromVer);
+            if (!validation.valid) {
+                showError(validation.error);
+                return;
+            }
+            
+            showLoading();
+            
+            const formData = new FormData();
+            formData.append('from_version', fromVer);
+            formData.append('to_version', toVer);
+            formData.append('vector', vector);
+            
+            try {
+                const response = await fetch('/api/convert', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayConversionResult(data, fromVer, toVer);
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Connection error: ' + error.message);
+            }
+        }
+
+        function showHelpFromButton(button) {
+            const descJson = button.getAttribute('data-desc');
+            try {
+                const desc = JSON.parse(descJson);
+                showHelp(desc);
+            } catch (e) {
+                console.error('Error parsing description:', e);
+            }
+        }
+
+        function showHelp(desc) {
+            document.getElementById('help-title').textContent = desc["name"];
+            
+            let content = `<p class="text-zinc-400 mb-4">${desc["description"]}</p>`;
+            content += '<div class="space-y-3">';
+            
+            for (const [key, value] of Object.entries(desc["values"])) {
+                content += `
+                    <div class="glass-card p-4">
+                        <div class="font-semibold text-amber-500">${value["label"]}</div>
+                        <div class="text-sm text-zinc-400 mt-1">${value["desc"]}</div>
+                    </div>
+                `;
+            }
+            content += '</div>';
+            
+            document.getElementById('help-content').innerHTML = content;
+            document.getElementById('help-modal').classList.remove('hidden');
+        }
+
+        function closeHelp() {
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        document.getElementById('help-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeHelp();
+        });
+
+        // Explanations are on by default; experts can turn them off (remembered per browser)
+        (function () {
+            let saved = null;
+            try { saved = localStorage.getItem('cvss_explanations'); } catch (e) {}
+            if (saved === 'off') {
+                document.body.classList.add('explain-off');
+                const box = document.getElementById('explain-toggle');
+                if (box) box.checked = false;
+            }
+        })();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlData = getVectorFromURL();
+            if (urlData.version && urlData.vector) {
+                if (urlData.mode === 'calculator') {
+                    // Open calculator with the specified version and vector
+                    const versionMap = {'2.0': 'v2', '3.0': 'v3', '3.1': 'v31', '4.0': 'v4'};
+                    const version = versionMap[urlData.version] || urlData.version;
+                    
+                    // Pre-fill the converter form (for reference)
+                    const versionForForm = urlData.version.replace('v', '').replace('31', '3.1');
+                    document.getElementById('conv-from').value = versionForForm;
+                    document.getElementById('conv-vector').value = urlData.vector;
+                    
+                    // Switch to calculator
+                    currentVersion = version;
+                    switchVersion(version);
+                    
+                    // Apply vector values to form after a short delay to ensure DOM is ready
+                    setTimeout(() => {
+                        applyVectorToCalculator(version, urlData.vector);
+                    }, 200);
+                    
+                    showNotification('Calculator loaded from shared link!');
+                } else {
+                    // Old behavior - open converter
+                    document.getElementById('conv-from').value = urlData.version;
+                    document.getElementById('conv-vector').value = urlData.vector;
+                    switchToConverter();
+                }
+            } else if (new URLSearchParams(window.location.search).get('tool') === 'converter') {
+                const params = new URLSearchParams(window.location.search);
+                const fromVer = params.get('from');
+                const fromVec = params.get('vector');
+                // Links from CVE Search use "V3.1"; the select options are "3.1".
+                if (fromVer) document.getElementById('conv-from').value = fromVer.replace(/^v/i, '');
+                if (fromVec) document.getElementById('conv-vector').value = fromVec;
+                switchToConverter();
+            } else {
+                // Default to v3.1 - ensure proper initialization
+                currentVersion = 'v31';
+                // Update visual state for all checked radios
+                setTimeout(() => {
+                    updateVisualState('v31');
+                    triggerRecalculation('v31');
+                }, 100);
+            }
+        });
+
+        // ── Gauge + bar animation helpers ────────────────────────────────────
+
+        function animateScorePanel(container) {
+            // 1. Gauge arc
+            const arc = container.querySelector('.gauge-arc');
+            if (arc) {
+                const filled = parseFloat(arc.dataset.filled || 0);
+                // force start at 0 so the CSS transition plays
+                arc.style.strokeDasharray = '0 339.29';
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        arc.style.strokeDasharray = `${filled} 339.29`;
+                    });
+                });
+            }
+
+            // 2. Score counter roll
+            const scoreEl = container.querySelector('.gauge-score-value');
+            if (scoreEl) {
+                const target = parseFloat(scoreEl.dataset.target || scoreEl.textContent || 0);
+                const duration = 650;
+                const startTs = performance.now();
+                function tick(now) {
+                    const p = Math.min((now - startTs) / duration, 1);
+                    const eased = 1 - Math.pow(1 - p, 3);
+                    scoreEl.textContent = (target * eased).toFixed(1);
+                    if (p < 1) requestAnimationFrame(tick);
+                    else scoreEl.textContent = target.toFixed(1);
+                }
+                requestAnimationFrame(tick);
+            }
+
+            // 3. Score bar
+            const barFill = container.querySelector('.score-bar-fill');
+            if (barFill) {
+                const pct = parseFloat(barFill.dataset.pct || 0);
+                barFill.style.width = '0%';
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        barFill.style.width = pct + '%';
+                    });
+                });
+            }
+
+            // 4. Sub-bars (impact + exploitability)
+            container.querySelectorAll('.sub-bar').forEach(bar => {
+                const pct = parseFloat(bar.dataset.pct || 0);
+                bar.style.width = '0%';
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        bar.style.width = pct + '%';
+                    });
+                });
+            });
+        }
+
+        // HTMX event handlers to sync UI state after content updates
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            // Animate score panel
+            animateScorePanel(evt.detail.target);
+            // Update visual state for the current version after HTMX swap
+            if (currentVersion && currentVersion !== 'converter') {
+                setTimeout(() => updateVisualState(currentVersion), 10);
+            }
+        });
+        
+        // ==========================================
+        // Analytics events (Google Analytics 4 via track(), see partials/analytics.html)
+        // ==========================================
+        let pageFullyLoaded = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Delay marking page as loaded to avoid tracking initial metric sets
+            setTimeout(() => { pageFullyLoaded = true; }, 1000);
+        });
+
+        function trackVersionSwitch(version) {
+            track('version_switch', { version: version });
+        }
+
+        function trackScoreCalculation(version, score, severity) {
+            track('score_calculated', { version: version, score: score, severity: severity });
+        }
+
+        function trackShareLink(version) {
+            track('share_link_generated', { version: version });
+        }
+
+        function trackConverterUsed(fromVersion, toVersion) {
+            track('converter_used', { from: fromVersion, to: toVersion });
+        }
+
+        function trackMetricChange(version, metric, value) {
+            if (pageFullyLoaded) track('metric_changed', { version: version, metric: metric, value: value });
+        }
+
+        // Override switchVersion to track
+        const originalSwitchVersion = switchVersion;
+        switchVersion = function(version) {
+            trackVersionSwitch(version);
+            return originalSwitchVersion(version);
+        };
+
+        // Override switchToConverter to track
+        const originalSwitchToConverter = switchToConverter;
+        switchToConverter = function() {
+            trackVersionSwitch('converter');
+            return originalSwitchToConverter();
+        };
+
+        // Track score display updates via HTMX (debounced to avoid excessive events)
+        const lastTrackedScore = {};
+        const debouncedTrackScore = debounce(function(version, score, severity) {
+            const key = version + '_score';
+            if (lastTrackedScore[key] !== score) {
+                lastTrackedScore[key] = score;
+                trackScoreCalculation(version, score, severity);
+            }
+        }, 500);
+
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id && evt.detail.target.id.includes('score-display')) {
+                const version = evt.detail.target.id.split('-')[0];
+                const scoreEl = evt.detail.target.querySelector('.score-display');
+                const severityEl = evt.detail.target.querySelector('.severity-badge');
+                if (scoreEl && severityEl) {
+                    const score = scoreEl.textContent.trim();
+                    const severity = severityEl.textContent.trim();
+                    if (score !== '--' && severity !== '--' && !isNaN(parseFloat(score))) {
+                        debouncedTrackScore(version, score, severity);
+                    }
+                }
+            }
+        });
+
+        // Track share button clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.share-btn, [onclick*="shareResult"]')) {
+                trackShareLink(currentVersion || 'v31');
+            }
+        });
+
+        // Track converter submission
+        const convForm = document.getElementById('converter-form');
+        if (convForm) {
+            convForm.addEventListener('submit', function() {
+                const from = document.getElementById('conv-from')?.value;
+                const to = document.getElementById('conv-to')?.value;
+                if (from && to) trackConverterUsed(from, to);
+            });
+        }
+        
+        // Debounce helper to prevent excessive tracking
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>

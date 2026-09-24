@@ -1,0 +1,26 @@
+{# SEO head tags. Pages set `seo = seo_page("<key>")` (see app/seo.py) before including
+   partials/theme_head.html; pages without it are private and get noindex. #}
+{% if seo is defined and seo %}
+<title>{{ seo.title }}</title>
+<meta name="description" content="{{ seo.description }}">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<link rel="canonical" href="{{ seo.url }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CVSS Guru">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="{{ seo.url }}">
+<meta property="og:title" content="{{ seo.title }}">
+<meta property="og:description" content="{{ seo.description }}">
+<meta property="og:image" content="{{ site_url }}/static/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="CVSS Guru — free CVSS calculator, converter and CVE lookup">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ seo.title }}">
+<meta name="twitter:description" content="{{ seo.description }}">
+<meta name="twitter:image" content="{{ site_url }}/static/og-image.png">
+<script type="application/ld+json">{{ seo.jsonld | safe }}</script>
+{% else %}
+<meta name="robots" content="noindex, nofollow">
+{% endif %}
+<link rel="alternate" type="text/plain" title="LLM summary" href="{{ site_url }}/llms.txt">
